@@ -5,8 +5,8 @@ from deepsense import neptune
 from torch.optim.lr_scheduler import ExponentialLR
 
 from steps.utils import get_logger
-from .validation import score_model
 from .utils import Averager, save_model
+from .validation import score_model
 
 logger = get_logger()
 
@@ -271,8 +271,9 @@ class ModelCheckpoint(Callback):
 
 
 class NeptuneMonitor(Callback):
-    def __init__(self):
+    def __init__(self, model_name):
         super().__init__()
+        self.model_name = model_name
         self.ctx = neptune.Context()
         self.epoch_loss_averager = Averager()
 
@@ -290,7 +291,7 @@ class NeptuneMonitor(Callback):
             else:
                 self.epoch_loss_averagers[name] = Averager()
 
-            self.ctx.channel_send('batch {} loss'.format(name), x=self.batch_id, y=loss)
+            self.ctx.channel_send('{} batch {} loss'.format(self.model_name, name), x=self.batch_id, y=loss)
 
         self.batch_id += 1
 
@@ -302,7 +303,7 @@ class NeptuneMonitor(Callback):
         for name, averager in self.epoch_loss_averagers.items():
             epoch_avg_loss = averager.value
             averager.reset()
-            self.ctx.channel_send('epoch {} loss'.format(name), x=self.epoch_id, y=epoch_avg_loss)
+            self.ctx.channel_send('{} epoch {} loss'.format(self.model_name, name), x=self.epoch_id, y=epoch_avg_loss)
 
         self.model.eval()
         val_loss = score_model(self.model,
@@ -311,12 +312,20 @@ class NeptuneMonitor(Callback):
         self.model.train()
         for name, loss in val_loss.items():
             loss = loss.data.cpu().numpy()[0]
-            self.ctx.channel_send('epoch_val {} loss'.format(name), x=self.epoch_id, y=loss)
+            self.ctx.channel_send('{} epoch_val {} loss'.format(self.model_name, name), x=self.epoch_id, y=loss)
 
 
 class ExperimentTiming(Callback):
-    def __init__(self):
+    def __init__(self, epoch_every=None, batch_every=None):
         super().__init__()
+        if epoch_every == 0:
+            self.epoch_every = False
+        else:
+            self.epoch_every = epoch_every
+        if batch_every == 0:
+            self.batch_every = False
+        else:
+            self.batch_every = batch_every
         self.batch_start = None
         self.epoch_start = None
         self.current_sum = None
@@ -328,12 +337,14 @@ class ExperimentTiming(Callback):
         logger.info('starting training...')
 
     def on_train_end(self, *args, **kwargs):
-        logger.info('training finished...')
+        logger.info('training finished')
 
     def on_epoch_begin(self, *args, **kwargs):
         if self.epoch_id > 0:
             epoch_time = datetime.now() - self.epoch_start
-            logger.info('epoch {0} time {1}'.format(self.epoch_id - 1, str(epoch_time)[:-7]))
+            if self.epoch_every:
+                if (self.epoch_id % self.epoch_every) == 0:
+                    logger.info('epoch {0} time {1}'.format(self.epoch_id - 1, str(epoch_time)[:-7]))
         self.epoch_start = datetime.now()
         self.current_sum = timedelta()
         self.current_mean = timedelta()
@@ -344,14 +355,16 @@ class ExperimentTiming(Callback):
             current_delta = datetime.now() - self.batch_start
             self.current_sum += current_delta
             self.current_mean = self.current_sum / self.batch_id
-        if self.batch_id > 0 and (((self.batch_id - 1) % 10) == 0):
-            logger.info('epoch {0} average batch time: {1}'.format(self.epoch_id, str(self.current_mean)[:-5]))
-        if self.batch_id == 0 or self.batch_id % 10 == 0:
-            logger.info('epoch {0} batch {1} ...'.format(self.epoch_id, self.batch_id))
+        if self.batch_every:
+            if self.batch_id > 0 and (((self.batch_id - 1) % self.batch_every) == 0):
+                logger.info('epoch {0} average batch time: {1}'.format(self.epoch_id, str(self.current_mean)[:-5]))
+        if self.batch_every:
+            if self.batch_id == 0 or self.batch_id % self.batch_every == 0:
+                logger.info('epoch {0} batch {1} ...'.format(self.epoch_id, self.batch_id))
         self.batch_start = datetime.now()
 
 
-class CallbackReduceLROnPlateau(Callback):  # thank you keras
+class ReduceLROnPlateau(Callback):  # thank you keras
     def __init__(self):
         super().__init__()
         pass
