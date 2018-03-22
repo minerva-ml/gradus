@@ -1,7 +1,7 @@
 from keras.preprocessing import text, sequence
 from sklearn.externals import joblib
 
-from steps.base import BaseTransformer
+from ..base import BaseTransformer
 
 
 class Tokenizer(BaseTransformer):

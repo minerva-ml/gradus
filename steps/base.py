@@ -6,7 +6,7 @@ import numpy as np
 from scipy import sparse
 from sklearn.externals import joblib
 
-from steps.utils import view_graph, plot_graph, get_logger, initialize_logger
+from .utils import view_graph, plot_graph, get_logger, initialize_logger
 
 initialize_logger()
 logger = get_logger()

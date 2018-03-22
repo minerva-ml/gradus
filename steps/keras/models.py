@@ -2,9 +2,9 @@ import shutil
 
 from keras.models import load_model
 
-from steps.base import BaseTransformer
-from steps.keras.contrib import AttentionWeightedAverage
-from steps.keras.architectures import vdcnn, scnn, dpcnn, cudnn_gru, cudnn_lstm
+from ..base import BaseTransformer
+from .contrib import AttentionWeightedAverage
+from .architectures import vdcnn, scnn, dpcnn, cudnn_gru, cudnn_lstm
 
 
 class KerasModelTransformer(BaseTransformer):

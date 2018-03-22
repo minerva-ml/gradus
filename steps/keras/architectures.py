@@ -6,7 +6,7 @@ from keras.layers import Input, Embedding, PReLU, Bidirectional, Lambda, \
 from keras.layers.merge import add, concatenate
 from keras.models import Model
 
-from steps.keras.contrib import AttentionWeightedAverage
+from .contrib import AttentionWeightedAverage
 
 
 def scnn(embedding_matrix, embedding_size, trainable_embedding, maxlen, max_features,

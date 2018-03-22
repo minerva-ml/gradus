@@ -8,6 +8,7 @@ import pandas as pd
 from sklearn.externals import joblib
 from sklearn.feature_extraction import text
 import sklearn.preprocessing as sk_prep
+import sklearn.decomposition as decomp
 import nltk
 from nltk.tokenize import TweetTokenizer
 from nltk.stem.wordnet import WordNetLemmatizer
@@ -19,8 +20,7 @@ tokenizer = TweetTokenizer()
 nltk.download('wordnet')
 nltk.download('stopwords')
 eng_stopwords = set(stopwords.words("english"))
-
-with open('external_data/apostrophes.json', 'r') as f:
+with open('steps/resources/apostrophes.json', 'r') as f:
     APPO = json.load(f)
 
 
@@ -208,6 +208,25 @@ class TfidfVectorizer(BaseTransformer):
 
     def save(self, filepath):
         joblib.dump(self.vectorizer, filepath)
+
+
+class TruncatedSVD(BaseTransformer):
+    def __init__(self, **kwargs):
+        self.truncated_svd = decomp.TruncatedSVD(**kwargs)
+
+    def fit(self, features):
+        self.truncated_svd.fit(features)
+        return self
+
+    def transform(self, features):
+        return {'features': self.truncated_svd.transform(features)}
+
+    def load(self, filepath):
+        self.truncated_svd = joblib.load(filepath)
+        return self
+
+    def save(self, filepath):
+        joblib.dump(self.truncated_svd, filepath)
 
 
 class TextCounter(BaseTransformer):

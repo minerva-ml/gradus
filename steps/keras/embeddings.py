@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.externals import joblib
 from gensim.models import KeyedVectors
 
-from steps.base import BaseTransformer
+from ..base import BaseTransformer
 
 
 class EmbeddingsMatrix(BaseTransformer):
