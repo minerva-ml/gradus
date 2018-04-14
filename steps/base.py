@@ -14,9 +14,10 @@ logger = get_logger()
 
 class Step:
     def __init__(self, name, transformer, input_steps=[], input_data=[], adapter=None,
-                 cache_dirpath=None, cache_output=True, save_output=False, load_saved_output=False,
+                 cache_dirpath=None, cache_output=False, save_output=False, load_saved_output=False,
                  save_graph=False, force_fitting=False):
         self.name = name
+
         self.transformer = transformer
 
         self.input_steps = input_steps
@@ -35,6 +36,14 @@ class Step:
             graph_filepath = os.path.join(self.cache_dirpath, '{}_graph.json'.format(self.name))
             logger.info('Saving graph to {}'.format(graph_filepath))
             joblib.dump(self.graph_info, graph_filepath)
+
+    def _copy_transformer(self, step, name, dirpath):
+        self.transformer = self.transformer.transformer
+
+        original_filepath = os.path.join(step.cache_dirpath, 'transformers', step.name)
+        copy_filepath = os.path.join(dirpath, 'transformers', name)
+        logger.info('copying transformer from {} to {}'.format(original_filepath, copy_filepath))
+        shutil.copyfile(original_filepath, copy_filepath)
 
     def _prep_cache(self, cache_dirpath):
         for dirname in ['transformers', 'outputs', 'tmp']:
@@ -65,6 +74,8 @@ class Step:
 
     @property
     def transformer_is_cached(self):
+        if isinstance(self.transformer, Step):
+            self._copy_transformer(self.transformer, self.name, self.cache_dirpath)
         return os.path.exists(self.cache_filepath_step_transformer)
 
     @property
@@ -245,7 +256,7 @@ class BaseTransformer:
         return self
 
     def save(self, filepath):
-        pass
+        joblib.dump({}, filepath)
 
 
 class MockTransformer(BaseTransformer):
@@ -259,22 +270,10 @@ class MockTransformer(BaseTransformer):
         self.fit(*args, **kwargs)
         return self.transform(*args, **kwargs)
 
-    def load(self, filepath):
-        return self
-
-    def save(self, filepath):
-        pass
-
 
 class Dummy(BaseTransformer):
     def transform(self, **kwargs):
         return kwargs
-
-    def load(self, filepath):
-        return self
-
-    def save(self, filepath):
-        joblib.dump({}, filepath)
 
 
 def to_tuple_inputs(inputs):
