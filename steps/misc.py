@@ -9,7 +9,7 @@ logger = get_logger()
 
 
 class LightGBM(BaseTransformer):
-    def __init__(self, params):
+    def __init__(self, **params):
         self.params = params
         self.training_params = ['number_boosting_rounds', 'early_stopping_rounds']
         self.evaluation_function = None
