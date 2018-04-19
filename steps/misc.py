@@ -14,7 +14,7 @@ class LightGBM(BaseTransformer):
         self.training_config = AttrDict(training_config)
         self.evaluation_function = None
 
-    def fit(self, X, y, X_valid, y_valid, feature_names, categorical_features, **kwargs):
+    def fit(self, X, y, X_valid, y_valid, feature_names=None, categorical_features=None, **kwargs):
         train = lgb.Dataset(X, label=y,
                             feature_name=feature_names,
                             categorical_feature=categorical_features
