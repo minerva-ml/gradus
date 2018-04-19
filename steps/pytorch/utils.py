@@ -1,5 +1,6 @@
-import cv2
 import numpy as np
+
+import cv2
 import torch
 from imgaug import augmenters as iaa
 

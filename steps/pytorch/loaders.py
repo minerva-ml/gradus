@@ -1,6 +1,6 @@
+import numpy as np
 from math import ceil
 
-import numpy as np
 import torch
 import torchvision.transforms as transforms
 from PIL import Image

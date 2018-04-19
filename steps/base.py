@@ -1,8 +1,8 @@
-import os
-import shutil
-import pprint
-
 import numpy as np
+import os
+import pprint
+import shutil
+
 from scipy import sparse
 from sklearn.externals import joblib
 
