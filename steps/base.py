@@ -1,11 +1,10 @@
-import numpy as np
 import os
 import pprint
 import shutil
 
-from scipy import sparse
 from sklearn.externals import joblib
 
+from .adapters import take_first_inputs
 from .utils import view_graph, plot_graph, get_logger, initialize_logger
 
 initialize_logger()
@@ -185,7 +184,7 @@ class Step:
                     (step_mapping, func) = mapping
                 elif len(mapping) == 1:
                     step_mapping = mapping
-                    func = identity_inputs
+                    func = take_first_inputs
                 else:
                     raise ValueError('wrong mapping specified')
 
@@ -274,42 +273,3 @@ class MockTransformer(BaseTransformer):
 class Dummy(BaseTransformer):
     def transform(self, **kwargs):
         return kwargs
-
-
-def to_tuple_inputs(inputs):
-    return tuple(inputs)
-
-
-def identity_inputs(inputs):
-    return inputs[0]
-
-
-def sparse_hstack_inputs(inputs):
-    return sparse.hstack(inputs)
-
-
-def hstack_inputs(inputs):
-    return np.hstack(inputs)
-
-
-def vstack_inputs(inputs):
-    return np.vstack(inputs)
-
-
-def stack_inputs(inputs):
-    stacked = np.stack(inputs, axis=0)
-    return stacked
-
-
-def sum_inputs(inputs):
-    stacked = np.stack(inputs, axis=0)
-    return np.sum(stacked, axis=0)
-
-
-def average_inputs(inputs):
-    stacked = np.stack(inputs, axis=0)
-    return np.mean(stacked, axis=0)
-
-
-def exp_transform(inputs):
-    return np.exp(inputs[0])
