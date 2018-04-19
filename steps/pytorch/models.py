@@ -51,8 +51,6 @@ class Model(BaseTransformer):
 
         if torch.cuda.is_available():
             self.model = self.model.cuda()
-        else:
-            self.model = self.model
 
         self.callbacks.set_params(self, validation_datagen=validation_datagen)
         self.callbacks.on_train_begin()
