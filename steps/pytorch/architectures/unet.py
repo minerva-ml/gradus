@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from .utils import get_downsample_pad, get_upsample_pad
+import warnings
 
 
 class UNet(nn.Module):
@@ -14,6 +15,8 @@ class UNet(nn.Module):
 
         assert conv_kernel % 2 == 1
         assert pool_stride > 1 or pool_kernel % 2 == 1
+        warnings.warn("Please make sure, that your input tensor's dimensions are divisible by "
+                      "(pool_stride ** repeat_blocks)")
 
         super(UNet, self).__init__()
 
