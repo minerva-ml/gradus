@@ -492,7 +492,7 @@ class BaseTransformer:
         joblib.dump({}, filepath)
 
 
-class Dummy(BaseTransformer):
+class NoOperation(BaseTransformer):
     """Transformer that performs no operation.
 
     It is sometimes usefull to organize the outputs from previous steps, join them together or rename them before
