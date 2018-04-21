@@ -60,10 +60,10 @@ class Step:
                 Example:
                     from steps.adapters import hstack_inputs
                     data = {'input_1':{'X':X,
-                                       'y':y}
+                                       'y':y
                                        },
                             'input_2': {'X':X,
-                                       'y':y}
+                                       'y':y
                                        }
                            }
                      step_1 = Step(name='step_1',
@@ -157,12 +157,6 @@ class Step:
         return all_steps
 
     @property
-    def named_steps(self):
-        """Redundant and can be dropped
-        """
-        return {step.name: step for step in self.input_steps}
-
-    @property
     def transformer_is_cached(self):
         """(bool): True if transformer exists under the cache_dirpath/transformers/name
         """
@@ -185,14 +179,23 @@ class Step:
         return os.path.exists(self.save_filepath_step_output)
 
     def fit_transform(self, data):
-        """Summary line.
+        """fits the model and transforms data or loads already processed data
 
-        Extended description of function.
+        Loads cached/saved outputs or adapts data for the current transformer and executes transformer.fit_transform
 
         Args:
-            data (dict): Description of arg1
+            data (dict): data dictionary with keys as input names and values as dictionaries of key:value pairs that can
+                be passed to the step.transformer.fit_transform method
+                Example:
+                    data = {'input_1':{'X':X,
+                                       'y':y
+                                       },
+                            'input_2': {'X':X,
+                                       'y':y
+                                       }
+                           }
         Returns:
-            dict: Description of return value
+            dict: step outputs from the transformer.fit_transform method
         """
         if self.output_is_cached and not self.force_fitting:
             logger.info('step {} loading output...'.format(self.name))
@@ -217,6 +220,24 @@ class Step:
         return step_output_data
 
     def transform(self, data):
+        """transforms data or loads already processed data
+
+        Loads cached/saved outputs or adapts data for the current transformer and executes transformer.transform
+
+        Args:
+            data (dict): data dictionary with keys as input names and values as dictionaries of key:value pairs that can
+                be passed to the step.transformer.fit_transform method
+                Example:
+                    data = {'input_1':{'X':X,
+                                       'y':y
+                                       },
+                            'input_2': {'X':X,
+                                       'y':y
+                                       }
+                           }
+        Returns:
+            dict: step outputs from the transformer.transform method
+        """
         if self.output_is_cached:
             logger.info('step {} loading output...'.format(self.name))
             step_output_data = self._load_output(self.save_filepath_step_tmp)
