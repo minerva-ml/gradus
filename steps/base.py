@@ -20,6 +20,13 @@ class Step:
         Step is an execution wrapper over the transformer (see BaseTransformer class documentation) that enables building complex machine learning pipelines.
         It handles multiple input/output data flows, has build-in persistence/caching of both models (transformers) and
         intermediate step outputs.
+        Step executes fit_transform on every step recursively starting from the very last step and making its way forward
+        through the input_steps. If step transformer was fitted already then said transformer is loaded in and the transorm method
+        is executed.
+        One can easily debug the data flow by plotting the pipeline graph with either step.plot_graph(filepath) method
+        or simply returning it in a jupyter notebook cell.
+        Every part of the pipeline can be easily accessed via step.get_step(name) method which makes it easy to reuse parts of the pipeline
+        across multiple solutions.
         For detailed examples go to the notebooks section.
 
         Args:
@@ -130,6 +137,140 @@ class Step:
             logger.info('Saving graph to {}'.format(graph_filepath))
             joblib.dump(self.graph_info, graph_filepath)
 
+    @property
+    def graph_info(self):
+        """(dict): dictionary describing the pipeline execution graph.
+        """
+        graph_info = {'edges': set(),
+                      'nodes': set()}
+
+        graph_info = self._get_graph_info(graph_info)
+
+        return graph_info
+
+    @property
+    def all_steps(self):
+        """(dict): dictionary of steps in the pipeline.
+        """
+        all_steps = {}
+        all_steps = self._get_steps(all_steps)
+        return all_steps
+
+    @property
+    def named_steps(self):
+        """Redundant and can be dropped
+        """
+        return {step.name: step for step in self.input_steps}
+
+    @property
+    def transformer_is_cached(self):
+        """(bool): True if transformer exists under the cache_dirpath/transformers/name
+        """
+        if isinstance(self.transformer, Step):
+            self._copy_transformer(self.transformer, self.name, self.cache_dirpath)
+        return os.path.exists(self.cache_filepath_step_transformer)
+
+    @property
+    def output_is_cached(self):
+        """(bool): True if step outputs exists under the cache_dirpath/tmp/name.
+            See cache_output.
+        """
+        return os.path.exists(self.save_filepath_step_tmp)
+
+    @property
+    def output_is_saved(self):
+        """(bool): True if step outputs exists under the cache_dirpath/outputs/name.
+            See save_output.
+        """
+        return os.path.exists(self.save_filepath_step_output)
+
+    def fit_transform(self, data):
+        """Summary line.
+
+        Extended description of function.
+
+        Args:
+            data (dict): Description of arg1
+        Returns:
+            dict: Description of return value
+        """
+        if self.output_is_cached and not self.force_fitting:
+            logger.info('step {} loading output...'.format(self.name))
+            step_output_data = self._load_output(self.save_filepath_step_tmp)
+        elif self.output_is_saved and self.load_saved_output and not self.force_fitting:
+            logger.info('step {} loading output...'.format(self.name))
+            step_output_data = self._load_output(self.save_filepath_step_output)
+        else:
+            step_inputs = {}
+            if self.input_data is not None:
+                for input_data_part in self.input_data:
+                    step_inputs[input_data_part] = data[input_data_part]
+
+            for input_step in self.input_steps:
+                step_inputs[input_step.name] = input_step.fit_transform(data)
+
+            if self.adapter:
+                step_inputs = self._adapt(step_inputs)
+            else:
+                step_inputs = self._unpack(step_inputs)
+            step_output_data = self._cached_fit_transform(step_inputs)
+        return step_output_data
+
+    def transform(self, data):
+        if self.output_is_cached:
+            logger.info('step {} loading output...'.format(self.name))
+            step_output_data = self._load_output(self.save_filepath_step_tmp)
+        elif self.output_is_saved and self.load_saved_output:
+            logger.info('step {} loading output...'.format(self.name))
+            step_output_data = self._load_output(self.save_filepath_step_output)
+        else:
+            step_inputs = {}
+            if self.input_data is not None:
+                for input_data_part in self.input_data:
+                    step_inputs[input_data_part] = data[input_data_part]
+
+            for input_step in self.input_steps:
+                step_inputs[input_step.name] = input_step.transform(data)
+
+            if self.adapter:
+                step_inputs = self._adapt(step_inputs)
+            else:
+                step_inputs = self._unpack(step_inputs)
+            step_output_data = self._cached_transform(step_inputs)
+        return step_output_data
+
+    def clean_cache(self):
+        """Removes cached step outputs.
+
+        It removes all cached step output from the cache_dirpath/tmp
+        """
+        for name, step in self.all_steps.items():
+            step._clean_cache()
+
+    def get_step(self, name):
+        """Extracts step by name from the pipeline.
+
+        Extracted step is a fully functional pipeline as well.
+        This method can be used to port parts of the pipeline between problems.
+
+        Args:
+            name (str): name of the step to be fetched
+        Returns:
+            obj: Step instance
+        """
+        return self.all_steps[name]
+
+    def plot_graph(self, filepath):
+        """Creates pipeline graph and saves it to a file
+
+        Pydot graph is created and saved to filepath. This feature is usefull for debugging purposes especially
+        when working with complex pipelines.
+
+        Args:
+            filepath (str): filepath where the graph should be saved
+        """
+        plot_graph(self.graph_info, filepath)
+
     def _copy_transformer(self, step, name, dirpath):
         self.transformer = self.transformer.transformer
 
@@ -150,57 +291,9 @@ class Step:
         self.save_filepath_step_output = os.path.join(self.save_dirpath_outputs, '{}'.format(self.name))
         self.save_filepath_step_tmp = os.path.join(self.save_dirpath_tmp, '{}'.format(self.name))
 
-    def clean_cache(self):
-        for name, step in self.all_steps.items():
-            step._clean_cache()
-
     def _clean_cache(self):
         if os.path.exists(self.save_filepath_step_tmp):
             os.remove(self.save_filepath_step_tmp)
-
-    @property
-    def named_steps(self):
-        return {step.name: step for step in self.input_steps}
-
-    def get_step(self, name):
-        return self.all_steps[name]
-
-    @property
-    def transformer_is_cached(self):
-        if isinstance(self.transformer, Step):
-            self._copy_transformer(self.transformer, self.name, self.cache_dirpath)
-        return os.path.exists(self.cache_filepath_step_transformer)
-
-    @property
-    def output_is_cached(self):
-        return os.path.exists(self.save_filepath_step_tmp)
-
-    @property
-    def output_is_saved(self):
-        return os.path.exists(self.save_filepath_step_output)
-
-    def fit_transform(self, data):
-        if self.output_is_cached and not self.force_fitting:
-            logger.info('step {} loading output...'.format(self.name))
-            step_output_data = self._load_output(self.save_filepath_step_tmp)
-        elif self.output_is_saved and self.load_saved_output and not self.force_fitting:
-            logger.info('step {} loading output...'.format(self.name))
-            step_output_data = self._load_output(self.save_filepath_step_output)
-        else:
-            step_inputs = {}
-            if self.input_data is not None:
-                for input_data_part in self.input_data:
-                    step_inputs[input_data_part] = data[input_data_part]
-
-            for input_step in self.input_steps:
-                step_inputs[input_step.name] = input_step.fit_transform(data)
-
-            if self.adapter:
-                step_inputs = self.adapt(step_inputs)
-            else:
-                step_inputs = self.unpack(step_inputs)
-            step_output_data = self._cached_fit_transform(step_inputs)
-        return step_output_data
 
     def _cached_fit_transform(self, step_inputs):
         if self.transformer_is_cached and not self.force_fitting:
@@ -228,29 +321,6 @@ class Step:
     def _save_output(self, output_data, filepath):
         joblib.dump(output_data, filepath)
 
-    def transform(self, data):
-        if self.output_is_cached:
-            logger.info('step {} loading output...'.format(self.name))
-            step_output_data = self._load_output(self.save_filepath_step_tmp)
-        elif self.output_is_saved and self.load_saved_output:
-            logger.info('step {} loading output...'.format(self.name))
-            step_output_data = self._load_output(self.save_filepath_step_output)
-        else:
-            step_inputs = {}
-            if self.input_data is not None:
-                for input_data_part in self.input_data:
-                    step_inputs[input_data_part] = data[input_data_part]
-
-            for input_step in self.input_steps:
-                step_inputs[input_step.name] = input_step.transform(data)
-
-            if self.adapter:
-                step_inputs = self.adapt(step_inputs)
-            else:
-                step_inputs = self.unpack(step_inputs)
-            step_output_data = self._cached_transform(step_inputs)
-        return step_output_data
-
     def _cached_transform(self, step_inputs):
         if self.transformer_is_cached:
             logger.info('step {} loading transformer...'.format(self.name))
@@ -267,7 +337,7 @@ class Step:
             self._save_output(step_output_data, self.save_filepath_step_output)
         return step_output_data
 
-    def adapt(self, step_inputs):
+    def _adapt(self, step_inputs):
         logger.info('step {} adapting inputs'.format(self.name))
         adapted_steps = {}
         for adapted_name, mapping in self.adapter.items():
@@ -286,33 +356,18 @@ class Step:
                 adapted_steps[adapted_name] = func(raw_inputs)
         return adapted_steps
 
-    def unpack(self, step_inputs):
+    def _unpack(self, step_inputs):
         logger.info('step {} unpacking inputs'.format(self.name))
         unpacked_steps = {}
         for step_name, step_dict in step_inputs.items():
             unpacked_steps = {**unpacked_steps, **step_dict}
         return unpacked_steps
 
-    @property
-    def all_steps(self):
-        all_steps = {}
-        all_steps = self._get_steps(all_steps)
-        return all_steps
-
     def _get_steps(self, all_steps):
         for input_step in self.input_steps:
             all_steps = input_step._get_steps(all_steps)
         all_steps[self.name] = self
         return all_steps
-
-    @property
-    def graph_info(self):
-        graph_info = {'edges': set(),
-                      'nodes': set()}
-
-        graph_info = self._get_graph_info(graph_info)
-
-        return graph_info
 
     def _get_graph_info(self, graph_info):
         for input_step in self.input_steps:
@@ -323,9 +378,6 @@ class Step:
             graph_info['nodes'].add(input_data)
             graph_info['edges'].add((input_data, self.name))
         return graph_info
-
-    def plot_graph(self, filepath):
-        plot_graph(self.graph_info, filepath)
 
     def __str__(self):
         return pprint.pformat(self.graph_info)
