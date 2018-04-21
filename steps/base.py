@@ -15,10 +15,11 @@ class Step:
     def __init__(self, name, transformer, input_steps=[], input_data=[], adapter=None,
                  cache_dirpath=None, cache_output=False, save_output=False, load_saved_output=False,
                  save_graph=False, force_fitting=False):
-        """Summary line.
+        """Building block of steps pipelines.
 
-        Step is an execution wrapper over transformer that enables building complex machine learning pipelines.
-        It deals with situations where one wants to join multiple 
+        Step is an execution wrapper over the transformer (see BaseTransformer class documentation) that enables building complex machine learning pipelines.
+        It handles multiple input/output data flows, has build-in persistence/caching of both models (transformers) and
+        intermediate step outputs.
         For detailed examples go to the notebooks section.
 
         Args:
