@@ -17,7 +17,9 @@ class Step:
                  save_graph=False, force_fitting=False):
         """Summary line.
 
-        Extended description of function.
+        Step is an execution wrapper over transformer that enables building complex machine learning pipelines.
+        It deals with situations where one wants to join multiple 
+        For detailed examples go to the notebooks section.
 
         Args:
             name (int): Step name. Each step in a pipeline needs to have a unique name.
@@ -81,18 +83,30 @@ class Step:
                         outputs: step output dictionaries are persisted in this folder (if save_output=True)
                         tmp: step output dictionaries are persisted in this folder (if cache_output=True).
                             This folder is temporary and should be cleaned before/after every run
-                cache_output (bool): default False. If true then step output dictionary will be cached after transform method
+                cache_output (bool): default False. If true then step output dictionary will be cached to cache_dirpath/tmp/name after transform method
                     of the step transformer is completed. If the same step is used multiple times in the pipeline only the first time
-                    the transform method is executed and later the output dictionary is loaded from the cache_dirpath/tmp directory.
+                    the transform method is executed and later the output dictionary is loaded from the cache_dirpath/tmp/name directory.
                     Warning:
                         One should always run pipeline.clean_cache() before executing pipeline.fit_transform(data) or pipeline.transform(data)
                         Caution when working with large datasets is advised.
-                save_output (bool): default False,
-                load_saved_output=False,
-                force_fitting=False
-                save_graph=False,
-        Returns:
-        bool: Description of return value
+                save_output (bool): default False. If True then step output dictionary will be saved to cache_dirpath/outputs/name after transform method
+                    of the step transformer is completed. It will save the output after every run of the step.transformer.transform method.
+                    It will not be loaded unless specified with load_saved_output. It is especially useful when debugging and working with
+                    ensemble models or time consuming feature extraction. One can easily persist already computed pieces of the pipeline
+                    and not waste time recalculating them in the future.
+                    Warning:
+                        Caution when working with large datasets is advised.
+                load_saved_output (bool): default False. If True then step output dictionary saved to the cache_dirpath/tmp/name will be loaded when
+                    step is called.
+                    Warning:
+                        Reruning the same pipeline on new data with load_saved_output may lead to errors when outputs from
+                        old data are loaded while user would expect the pipeline to use new data instead.
+                force_fitting (bool): default False. If True then step transformer will be fitted (via fit_transform) even if
+                    cache_dirpath/transformers/name exists. This is helpful when one wants to use save_output=True and load save_output=True
+                    on a previous step and fit current step multiple times. That is a typical usecase when tuning hyperparameters
+                    for an ensemble model trained on the outputs from first level models or a model build on features that are
+                    time consuming to compute.
+                save_graph (bool): default False. If true then the pipeline graph will be saved to the cache_dirpath/name_graph.json file
         """
         self.name = name
 
