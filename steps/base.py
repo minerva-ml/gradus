@@ -15,6 +15,85 @@ class Step:
     def __init__(self, name, transformer, input_steps=[], input_data=[], adapter=None,
                  cache_dirpath=None, cache_output=False, save_output=False, load_saved_output=False,
                  save_graph=False, force_fitting=False):
+        """Summary line.
+
+        Extended description of function.
+
+        Args:
+            name (int): Step name. Each step in a pipeline needs to have a unique name.
+                Transformers, and Step outputs will be persisted/cached/saved under this exact name.
+            transformer (obj): Step instance or object that inherits from BaseTransformer.
+                When Step instance is passed transformer from that Step will be copied and used to perform transformations.
+                It is useful when both train and valid data are passed in one pipeline (common situation in deep learnining).
+            input_steps (list): list of Step instances default []. Current step will combine outputs from input_steps and input_data
+                and pass to the transformer methods fit_transform and transform.
+            input_data (list): list of str default []. Elements of this list are keys in the data dictionary that is passed
+                to the pipeline/step fit_transform and/or transform methods.Current step will combine input_data and outputs from input_steps
+                and pass to the transformer methods fit_transform and transform.
+                Example:
+                    data = {'input_1':{'X':X,
+                                       'y':y}
+                                       },
+                            'input_2': {'X':X,
+                                       'y':y}
+                                       }
+                           }
+                    step_1 = Step(...,
+                                  input_data = ['input_1']
+                                  ...
+                                  )
+            adapter (dict): dictionary of mappings used to adapt input_steps outputs and input_data to match transform and fit_transform
+                arguments for the transformer specified in this step. For each argument one needs to specify the
+                argument: ([(step_name, output_key)...(input_name, output_key)], aggregation_function).
+                If no aggregation_function is specified adapters.take_first_inputs function is used.
+                Number of aggregation functions are available in the steps.adapters module.
+                Example:
+                    from steps.adapters import hstack_inputs
+                    data = {'input_1':{'X':X,
+                                       'y':y}
+                                       },
+                            'input_2': {'X':X,
+                                       'y':y}
+                                       }
+                           }
+                     step_1 = Step(name='step_1',
+                                   ...
+                                   )
+                     step_2 = Step(name='step_2',
+                                   ...
+                                   )
+                     step_3 = Step(name='step_3',
+                                   input_steps=[step_1, step_2],
+                                   input_data=['input_2'],
+                                   adapter = {'X':([('step_1','X_transformed'),
+                                                    ('step_2','X_transformed'),
+                                                    ('step_2','categorical_features'),
+                                                    ('input_2','auxilary_features'),
+                                                   ], hstack_inputs)
+                                              'y':(['input_1', 'y'])
+                                             }
+                                   ...
+                                   )
+                cache_dirpath (str): path to the directory where all transformers, step outputs and temporary files
+                    should be stored.
+                    The following subfolders will be created if they were not created by other steps:
+                        transformers: transformer objects are persisted in this folder
+                        outputs: step output dictionaries are persisted in this folder (if save_output=True)
+                        tmp: step output dictionaries are persisted in this folder (if cache_output=True).
+                            This folder is temporary and should be cleaned before/after every run
+                cache_output (bool): default False. If true then step output dictionary will be cached after transform method
+                    of the step transformer is completed. If the same step is used multiple times in the pipeline only the first time
+                    the transform method is executed and later the output dictionary is loaded from the cache_dirpath/tmp directory.
+                    Warning:
+                        One should always run pipeline.clean_cache() before executing pipeline.fit_transform(data) or pipeline.transform(data)
+                        Caution when working with large datasets is advised.
+                save_output (bool): default False,
+                load_saved_output=False,
+                force_fitting=False
+                save_graph=False,
+        Returns:
+        bool: Description of return value
+        """
         self.name = name
 
         self.transformer = transformer
