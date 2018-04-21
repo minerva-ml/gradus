@@ -408,35 +408,98 @@ class Step:
 
 
 class BaseTransformer:
+    """Abstraction on two level fit/transform execution.
+
+    Basetransformer is an abstraction strongly inspired by the sklearn.Transformer sklearn.Estimator.
+    Two main concepts are:
+        1. Every action that can be performed on data (transformation, model training) can be performed in two steps
+        fitting (where trainable parameters are estimated) and transforming (where previously estimated parameters are used
+        to transform the data into desired state)
+        2. Every transformer knows how it should be saved and loaded (especially useful when working with Keras/Pytorch and Sklearn)
+        in one pipeline
+    """
+
     def fit(self, *args, **kwargs):
+        """Performs estimation of trainable parameters
+
+        All model estimations with sklearn, keras, pytorch models as well as some preprocessing techniques (normalization)
+        estimate parameters based on data (training data). Those parameters are trained during fit execution and
+        are persisted for the future.
+        Only the estimation logic, nothing else.
+
+        Args:
+            args: positional arguments (can be anything)
+            kwargs: keyword arguments (can be anything)
+
+        Returns:
+            obj: BaseTransformer instance
+        """
         return self
 
     def transform(self, *args, **kwargs):
+        """Performs transformation of data
+
+        All data transformation including prediction with deep learning/machine learning models can be performed here.
+        No parameters should be estimated in this method nor stored as class attributes.
+        Only the transformation logic, nothing else.
+
+        Args:
+            args: positional arguments (can be anything)
+            kwargs: keyword arguments (can be anything)
+
+        Returns:
+            obj: BaseTransformer instance
+        """
         return NotImplementedError
 
     def fit_transform(self, *args, **kwargs):
+        """Performs fit followed by transform
+
+        This method simply combines fit and transform.
+
+        Args:
+            args: positional arguments (can be anything)
+            kwargs: keyword arguments (can be anything)
+
+        Returns:
+            obj: BaseTransformer instance
+        """
         self.fit(*args, **kwargs)
         return self.transform(*args, **kwargs)
 
     def load(self, filepath):
+        """Saves the trainable parameters of the transformer
+
+        Specific implementation of loading persisted model parameters should be implemented here.
+        In case of transformers that do not learn any parameters one can leave this method as is.
+
+        Args:
+            filepath (str): filepath from which the transformer should be loaded
+        Returns:
+            obj: BaseTransformer instance
+        """
         return self
 
     def save(self, filepath):
+        """Saves the trainable parameters of the transformer
+
+        Specific implementation of model parameter persistance should be implemented here.
+        In case of transformers that do not learn any parameters one can leave this method as is.
+
+        Args:
+            filepath (str): filepath where the transformer parameters should be saved
+        """
         joblib.dump({}, filepath)
 
 
-class MockTransformer(BaseTransformer):
-    def fit(self, *args, **kwargs):
-        return self
-
-    def transform(self, *args, **kwargs):
-        return
-
-    def fit_transform(self, *args, **kwargs):
-        self.fit(*args, **kwargs)
-        return self.transform(*args, **kwargs)
-
-
 class Dummy(BaseTransformer):
+    """Transformer that performs no operation.
+
+    It is sometimes usefull to organize the outputs from previous steps, join them together or rename them before
+    passing to the next step. Typical usecase would be to join features extracted with
+    multiple transformers into one object called joined_features. In that case the adapter attribute is used to define
+    the mapping/joining scheme.
+
+    """
     def transform(self, **kwargs):
         return kwargs
