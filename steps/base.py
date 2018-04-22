@@ -12,23 +12,24 @@ logger = get_logger()
 
 
 class Step:
+    """Building block of steps pipelines.
+
+    Step is an execution wrapper over the transformer (see BaseTransformer class documentation) that enables building complex machine learning pipelines.
+    It handles multiple input/output data flows, has build-in persistence/caching of both models (transformers) and
+    intermediate step outputs.
+    Step executes fit_transform on every step recursively starting from the very last step and making its way forward
+    through the input_steps. If step transformer was fitted already then said transformer is loaded in and the transorm method
+    is executed.
+    One can easily debug the data flow by plotting the pipeline graph with either step.plot_graph(filepath) method
+    or simply returning it in a jupyter notebook cell.
+    Every part of the pipeline can be easily accessed via step.get_step(name) method which makes it easy to reuse parts of the pipeline
+    across multiple solutions.
+    For detailed examples go to the notebooks section.
+    """
     def __init__(self, name, transformer, input_steps=[], input_data=[], adapter=None,
                  cache_dirpath=None, cache_output=False, save_output=False, load_saved_output=False,
                  save_graph=False, force_fitting=False):
-        """Building block of steps pipelines.
-
-        Step is an execution wrapper over the transformer (see BaseTransformer class documentation) that enables building complex machine learning pipelines.
-        It handles multiple input/output data flows, has build-in persistence/caching of both models (transformers) and
-        intermediate step outputs.
-        Step executes fit_transform on every step recursively starting from the very last step and making its way forward
-        through the input_steps. If step transformer was fitted already then said transformer is loaded in and the transorm method
-        is executed.
-        One can easily debug the data flow by plotting the pipeline graph with either step.plot_graph(filepath) method
-        or simply returning it in a jupyter notebook cell.
-        Every part of the pipeline can be easily accessed via step.get_step(name) method which makes it easy to reuse parts of the pipeline
-        across multiple solutions.
-        For detailed examples go to the notebooks section.
-
+        """
         Args:
             name (int): Step name. Each step in a pipeline needs to have a unique name.
                 Transformers, and Step outputs will be persisted/cached/saved under this exact name.

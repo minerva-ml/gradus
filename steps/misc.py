@@ -9,7 +9,17 @@ logger = get_logger()
 
 
 class LightGBM(BaseTransformer):
-    def __init__(self, params):
+    """Transformer wrapper over the light gbm estimator.
+
+    To read more about light gbm see lightgbm package documentation.
+    """
+    def __init__(self, **params):
+        """
+        Args:
+            params (dict): light gbm parameters. All parameters that are passed to lgb.train method apart from the data
+            should be passed here.
+        """
+
         self.params = params
         self.training_params = ['number_boosting_rounds', 'early_stopping_rounds']
         self.evaluation_function = None
