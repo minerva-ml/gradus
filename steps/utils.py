@@ -6,12 +6,52 @@ import pydot_ng as pydot
 from IPython.display import Image, display
 
 
+def view_graph(graph_info):
+    """Performs fit followed by transform
+
+    This method simply combines fit and transform.
+
+    Args:
+        args: positional arguments (can be anything)
+        kwargs: keyword arguments (can be anything)
+    """
+    graph = create_graph(graph_info)
+    view_pydot(graph)
+
+
+def plot_graph(graph_info, filepath):
+    """Performs fit followed by transform
+
+    This method simply combines fit and transform.
+
+    Args:
+        args: positional arguments (can be anything)
+        kwargs: keyword arguments (can be anything)
+
+    """
+    graph = create_graph(graph_info)
+    graph.write(filepath, format='png')
+
+
 def view_pydot(pydot_object):
+    """Displays pydot graph in jupyter notebook
+
+    Args:
+        pydot_object: pydot.Dot object
+    """
     plt = Image(pydot_object.create_png())
     display(plt)
 
 
 def create_graph(graph_info):
+    """Creates pydot graph from the step graph dictionary.
+
+    Args:
+        graph_info (dict): graph dictionary with 'nodes' and 'edges' defined
+
+    Returns:
+        obj: pydot.Dot object representing the step graph
+    """
     dot = pydot.Dot()
     for node in graph_info['nodes']:
         dot.add_node(pydot.Node(node))
@@ -20,22 +60,27 @@ def create_graph(graph_info):
     return dot
 
 
-def view_graph(graph_info):
-    graph = create_graph(graph_info)
-    view_pydot(graph)
-
-
-def plot_graph(graph_info, filepath):
-    graph = create_graph(graph_info)
-    graph.write(filepath, format='png')
-
-
 def create_filepath(filepath):
+    """Creates directory path for the filepath if non-existend
+
+    Makes it easy to created necessary directory for the filepath.
+
+    Args:
+        filepath (str): filepath for which directory needs to be created
+
+    """
     dirpath = os.path.dirname(filepath)
     os.makedirs(dirpath, exist_ok=True)
 
 
 def initialize_logger():
+    """Initialize steps logger
+
+    It creates logger of name 'steps'
+
+    Returns:
+        obj: logging.Logger object
+    """
     logger = logging.getLogger('steps')
     logger.setLevel(logging.INFO)
     message_format = logging.Formatter(fmt='%(asctime)s %(name)s >>> %(message)s',
@@ -52,5 +97,13 @@ def initialize_logger():
 
     return logger
 
+
 def get_logger():
+    """Fetch existing steps logger
+
+    It fetches logger of name 'steps'
+
+    Returns:
+        obj: logging.Logger object of name 'steps'
+    """
     return logging.getLogger('steps')
