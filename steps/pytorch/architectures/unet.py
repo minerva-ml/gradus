@@ -13,8 +13,10 @@ class UNet(nn.Module):
                  kernel_scale=3,
                  **kwargs):
 
-        assert conv_kernel % 2 == 1
-        assert pool_stride > 1 or pool_kernel % 2 == 1
+        assert conv_kernel % 2 == 1, "Size of convolution kernel has to be an odd number. " \
+                                     "Otherwise convolution layer will not keep image size"
+        assert pool_stride > 1 or pool_kernel % 2 == 1, "Pooling layer stride has to be greater than one or" \
+                                                        "kernel of pooling layer has to be an odd number."
         warnings.warn("Please make sure, that your input tensor's dimensions are divisible by "
                       "(pool_stride ** repeat_blocks)")
 
