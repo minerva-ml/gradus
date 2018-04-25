@@ -23,6 +23,7 @@ class UNet(nn.Module):
         super(UNet, self).__init__()
 
         self.conv_kernel = conv_kernel
+        self.conv_stride = 1
         self.pool_kernel = pool_kernel
         self.pool_stride = pool_stride
         self.repeat_blocks = repeat_blocks
@@ -85,7 +86,7 @@ class UNet(nn.Module):
         return nn.ModuleList(up_samples)
 
     def _input_block(self):
-        stride = 1
+        stride = self.conv_stride
         padding = get_downsample_pad(stride=stride, kernel=self.conv_kernel)
         if self.batch_norm:
             input_block = nn.Sequential(nn.Conv2d(in_channels=self.in_channels, out_channels=self.n_filters,
@@ -124,7 +125,7 @@ class UNet(nn.Module):
 
     def _classification_block(self):
         in_block = int(2 * self.n_filters)
-        stride = 1
+        stride = self.conv_stride
         padding = get_downsample_pad(stride=stride, kernel=self.conv_kernel)
 
         if self.batch_norm:
@@ -245,7 +246,7 @@ class DownConv(nn.Module):
         self.down_conv = self._down_conv()
 
     def _down_conv(self):
-        stride = 1
+        stride = self.conv_stride
         padding = get_downsample_pad(stride=stride, kernel=self.kernel_size)
         if self.batch_norm:
             down_conv = nn.Sequential(nn.Conv2d(in_channels=self.in_channels, out_channels=self.block_channels,
@@ -293,7 +294,7 @@ class UpConv(nn.Module):
         self.up_conv = self._up_conv()
 
     def _up_conv(self):
-        stride = 1
+        stride = self.conv_stride
         padding = get_downsample_pad(stride=stride, kernel=self.kernel_size)
         if self.batch_norm:
             up_conv = nn.Sequential(nn.Conv2d(in_channels=self.in_channels, out_channels=self.block_channels,
