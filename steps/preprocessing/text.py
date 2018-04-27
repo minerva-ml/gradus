@@ -10,7 +10,8 @@ import nltk
 from nltk.tokenize import TweetTokenizer
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import stopwords
-from .base import BaseTransformer
+
+from steps.base import BaseTransformer
 
 lem = WordNetLemmatizer()
 tokenizer = TweetTokenizer()
