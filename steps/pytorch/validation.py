@@ -93,3 +93,8 @@ def torch_acc_score_multi_output(outputs, targets, take_first=None):
         accuracies.append(accuracy)
     avg_accuracy = sum(accuracies) / len(accuracies)
     return avg_accuracy
+
+
+def multiclass_segmentation_loss(output, target):
+    cross_entropy = nn.CrossEntropyLoss()
+    return cross_entropy(output, target)
