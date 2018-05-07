@@ -1,7 +1,7 @@
+import sklearn.decomposition as decomposition
 from sklearn.externals import joblib
 from sklearn.feature_extraction import text
-import sklearn.preprocessing as sk_prep
-import sklearn.decomposition as decomp
+from sklearn.preprocessing import Normalizer, MinMaxScaler
 
 from steps.base import BaseTransformer
 
@@ -55,7 +55,7 @@ class TfidfVectorizer(BaseTransformer):
 
 class TruncatedSVD(BaseTransformer):
     def __init__(self, **kwargs):
-        self.truncated_svd = decomp.TruncatedSVD(**kwargs)
+        self.truncated_svd = decomposition.TruncatedSVD(**kwargs)
 
     def fit(self, features):
         self.truncated_svd.fit(features)
@@ -74,7 +74,7 @@ class TruncatedSVD(BaseTransformer):
 
 class Normalizer(BaseTransformer):
     def __init__(self):
-        self.normalizer = sk_prep.Normalizer()
+        self.normalizer = Normalizer()
 
     def fit(self, X):
         self.normalizer.fit(X)
@@ -94,7 +94,7 @@ class Normalizer(BaseTransformer):
 
 class MinMaxScaler(BaseTransformer):
     def __init__(self):
-        self.minmax_scaler = sk_prep.MinMaxScaler()
+        self.minmax_scaler = MinMaxScaler()
 
     def fit(self, X):
         self.minmax_scaler.fit(X)
@@ -118,7 +118,7 @@ class MinMaxScalerMultilabel(BaseTransformer):
 
     def fit(self, X):
         for i in range(X.shape[1]):
-            minmax_scaler = sk_prep.MinMaxScaler()
+            minmax_scaler = MinMaxScaler()
             minmax_scaler.fit(X[:, i, :])
             self.minmax_scalers.append(minmax_scaler)
         return self
