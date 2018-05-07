@@ -26,9 +26,18 @@ class Step:
     across multiple solutions.
     For detailed examples go to the notebooks section.
     """
-    def __init__(self, name, transformer, input_steps=[], input_data=[], adapter=None,
-                 cache_dirpath=None, cache_output=False, save_output=False, load_saved_output=False,
-                 save_graph=False, force_fitting=False):
+    def __init__(self,
+                 name,
+                 transformer,
+                 input_steps=[],
+                 input_data=[],
+                 adapter=None,
+                 cache_dirpath=None,
+                 cache_output=False,
+                 save_output=False,
+                 load_saved_output=False,
+                 save_graph=False,
+                 force_fitting=False):
         """
         Args:
             name (int): Step name. Each step in a pipeline needs to have a unique name.
@@ -117,6 +126,7 @@ class Step:
                     time consuming to compute.
                 save_graph (bool): default False. If true then the pipeline graph will be saved to the cache_dirpath/name_graph.json file
         """
+
         self.name = name
 
         self.transformer = transformer
