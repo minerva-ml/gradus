@@ -1,10 +1,10 @@
 import os
 import pprint
 import shutil
+from collections import defaultdict
 
 from sklearn.externals import joblib
 
-from .adapters import take_first_inputs
 from .utils import view_graph, plot_graph, get_logger, initialize_logger
 
 initialize_logger()
@@ -176,34 +176,68 @@ class Step:
     def adapt(self, step_inputs):
         logger.info('step {} adapting inputs'.format(self.name))
         adapted_steps = {}
-        for adapted_name, mapping in self.adapter.items():
-            if isinstance(mapping, str):
-                adapted_steps[adapted_name] = step_inputs[mapping]
-            else:
-                if len(mapping) == 2:
-                    (step_mapping, func) = mapping
-                elif len(mapping) == 1:
-                    step_mapping = mapping
-                    func = take_first_inputs
-                else:
-                    raise ValueError('wrong mapping specified')
+        for adapted_name, recipe in self.adapter.items():
+            try:
+                adapted_steps[adapted_name] = self._adapt_one_name(step_inputs, recipe)
+            except (KeyError, ValueError) as ex:
+                raise StepsError("Error while adapting '{}'".format(adapted_name)) from ex
 
-                raw_inputs = [step_inputs[step_name][step_var] for step_name, step_var in step_mapping]
-                adapted_steps[adapted_name] = func(raw_inputs)
         return adapted_steps
 
     def unpack(self, step_inputs):
         logger.info('step {} unpacking inputs'.format(self.name))
         unpacked_steps = {}
+        key_to_step_names = defaultdict(list)
         for step_name, step_dict in step_inputs.items():
-            unpacked_steps = {**unpacked_steps, **step_dict}
-        return unpacked_steps
+            unpacked_steps.update(step_dict)
+            for key in step_dict.keys():
+                key_to_step_names[key].append(step_name)
+
+        repeated_keys = [(key, step_names) for key, step_names in key_to_step_names.items()
+                         if len(step_names) > 1]
+        if len(repeated_keys) == 0:
+            return unpacked_steps
+        else:
+            msg = "Could not unpack inputs. Following keys are present in multiple input steps:\n"\
+                "\n".join(["  '{}' present in steps {}".format(key, step_names)
+                           for key, step_names in repeated_keys])
+            raise StepsError(msg)
 
     @property
     def all_steps(self):
         all_steps = {}
         all_steps = self._get_steps(all_steps)
         return all_steps
+
+    def _adapt_one_name(self, step_inputs, recipe):
+        if isinstance(recipe, tuple) and len(recipe) == 2 and not callable(recipe[1]):
+            input_name, key = recipe
+            return self._extract_one_item(step_inputs, input_name, key)
+
+        if isinstance(recipe, tuple) and len(recipe) == 2 and callable(recipe[1]):
+            lst = recipe[0]
+            fun = recipe[1]
+        elif isinstance(recipe, list):
+            lst = recipe
+            fun = lambda x: x
+        else:
+            raise ValueError("Invalid adapting recipe: '{}'".format(recipe))
+
+        extracted = [self._extract_one_item(step_inputs, input_name, key)
+                     for input_name, key in lst]
+        return fun(extracted)
+
+    def _extract_one_item(self, step_inputs, input_name, key):
+        try:
+            input_dict = step_inputs[input_name]
+            try:
+                return input_dict[key]
+            except KeyError:
+                raise StepsError("Step '{}' didn't have '{}' in its output."
+                                 .format(input_name, key))
+        except KeyError:
+            raise StepsError("Step '{}' doesn't have '{}' as its input step."
+                             .format(self.name, input_name))
 
     def _get_steps(self, all_steps):
         for input_step in self.input_steps:
