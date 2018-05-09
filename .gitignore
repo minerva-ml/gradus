@@ -2,3 +2,5 @@
 .ipynb_checkpoints/
 *.pyc
 examples/cache/
+tests/.cache
+

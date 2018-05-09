@@ -273,3 +273,7 @@ class MockTransformer(BaseTransformer):
 class Dummy(BaseTransformer):
     def transform(self, **kwargs):
         return kwargs
+
+
+class StepsError(Exception):
+    pass
