@@ -4,6 +4,7 @@
 # Generated files
 *.pyc
 *.log
+.pytest_cache
 
 # Working directories
 examples/cache/
