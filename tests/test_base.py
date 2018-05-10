@@ -1,7 +1,5 @@
 import unittest
 import numpy as np
-import shutil
-from pathlib import Path
 
 from steps.base import Step, Dummy, StepsError
 

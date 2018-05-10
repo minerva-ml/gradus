@@ -102,9 +102,9 @@ class Step:
                 step_inputs[input_step.name] = input_step.fit_transform(data)
 
             if self.adapter:
-                step_inputs = self.adapt(step_inputs)
+                step_inputs = self._adapt(step_inputs)
             else:
-                step_inputs = self.unpack(step_inputs)
+                step_inputs = self._unpack(step_inputs)
             step_output_data = self._cached_fit_transform(step_inputs)
         return step_output_data
 
@@ -151,9 +151,9 @@ class Step:
                 step_inputs[input_step.name] = input_step.transform(data)
 
             if self.adapter:
-                step_inputs = self.adapt(step_inputs)
+                step_inputs = self._adapt(step_inputs)
             else:
-                step_inputs = self.unpack(step_inputs)
+                step_inputs = self._unpack(step_inputs)
             step_output_data = self._cached_transform(step_inputs)
         return step_output_data
 
@@ -173,18 +173,19 @@ class Step:
             self._save_output(step_output_data, self.save_filepath_step_output)
         return step_output_data
 
-    def adapt(self, step_inputs):
+    def _adapt(self, step_inputs):
         logger.info('step {} adapting inputs'.format(self.name))
         adapted_steps = {}
         for adapted_name, recipe in self.adapter.items():
             try:
                 adapted_steps[adapted_name] = self._adapt_one_name(step_inputs, recipe)
-            except (KeyError, ValueError) as ex:
-                raise StepsError("Error while adapting '{}'".format(adapted_name)) from ex
+            except (KeyError, ValueError) as e:
+                msg = "Error in step '{}' while adapting '{}'".format(self.name, adapted_name)
+                raise StepsError(msg) from e
 
         return adapted_steps
 
-    def unpack(self, step_inputs):
+    def _unpack(self, step_inputs):
         logger.info('step {} unpacking inputs'.format(self.name))
         unpacked_steps = {}
         key_to_step_names = defaultdict(list)
@@ -215,13 +216,14 @@ class Step:
             return self._extract_one_item(step_inputs, input_name, key)
 
         if isinstance(recipe, tuple) and len(recipe) == 2 and callable(recipe[1]):
-            lst = recipe[0]
-            fun = recipe[1]
+            lst, fun = recipe
         elif isinstance(recipe, list):
             lst = recipe
-            fun = lambda x: x
+
+            def fun(x): return x
         else:
-            raise ValueError("Invalid adapting recipe: '{}'".format(recipe))
+            msg = "Invalid adapting recipe: '{}'".format(recipe)
+            raise ValueError(msg)
 
         extracted = [self._extract_one_item(step_inputs, input_name, key)
                      for input_name, key in lst]
@@ -233,11 +235,11 @@ class Step:
             try:
                 return input_dict[key]
             except KeyError:
-                raise StepsError("Step '{}' didn't have '{}' in its output."
-                                 .format(input_name, key))
+                msg = "Step '{}' didn't have '{}' in its output.".format(input_name, key)
+                raise StepsError(msg)
         except KeyError:
-            raise StepsError("Step '{}' doesn't have '{}' as its input step."
-                             .format(self.name, input_name))
+            msg = "Step '{}' doesn't have '{}' as its input step.".format(self.name, input_name)
+            raise StepsError(msg)
 
     def _get_steps(self, all_steps):
         for input_step in self.input_steps:
