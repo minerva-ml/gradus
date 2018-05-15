@@ -6,21 +6,22 @@ from collections import defaultdict
 from sklearn.externals import joblib
 
 from .utils import view_graph, plot_graph, get_logger, initialize_logger
+from .adapter import AdapterError
 
 initialize_logger()
 logger = get_logger()
 
 
 class Step:
-    def __init__(self, name, transformer, input_steps=[], input_data=[], adapter=None,
+    def __init__(self, name, transformer, input_steps=None, input_data=None, adapter=None,
                  cache_dirpath=None, cache_output=False, save_output=False, load_saved_output=False,
                  save_graph=False, force_fitting=False):
         self.name = name
 
         self.transformer = transformer
 
-        self.input_steps = input_steps
-        self.input_data = input_data
+        self.input_steps = input_steps or []
+        self.input_data = input_data or []
         self.adapter = adapter
 
         self.force_fitting = force_fitting
@@ -175,15 +176,11 @@ class Step:
 
     def _adapt(self, step_inputs):
         logger.info('step {} adapting inputs'.format(self.name))
-        adapted_steps = {}
-        for adapted_name, recipe in self.adapter.items():
-            try:
-                adapted_steps[adapted_name] = self._adapt_one_name(step_inputs, recipe)
-            except (KeyError, ValueError) as e:
-                msg = "Error in step '{}' while adapting '{}'".format(self.name, adapted_name)
-                raise StepsError(msg) from e
-
-        return adapted_steps
+        try:
+            return self.adapter.adapt(step_inputs)
+        except AdapterError as e:
+            msg = "Error while adapting step '{}'".format(self.name)
+            raise StepsError(msg) from e
 
     def _unpack(self, step_inputs):
         logger.info('step {} unpacking inputs'.format(self.name))
@@ -209,37 +206,6 @@ class Step:
         all_steps = {}
         all_steps = self._get_steps(all_steps)
         return all_steps
-
-    def _adapt_one_name(self, step_inputs, recipe):
-        if isinstance(recipe, tuple) and len(recipe) == 2 and not callable(recipe[1]):
-            input_name, key = recipe
-            return self._extract_one_item(step_inputs, input_name, key)
-
-        if isinstance(recipe, tuple) and len(recipe) == 2 and callable(recipe[1]):
-            lst, fun = recipe
-        elif isinstance(recipe, list):
-            lst = recipe
-
-            def fun(x): return x
-        else:
-            msg = "Invalid adapting recipe: '{}'".format(recipe)
-            raise ValueError(msg)
-
-        extracted = [self._extract_one_item(step_inputs, input_name, key)
-                     for input_name, key in lst]
-        return fun(extracted)
-
-    def _extract_one_item(self, step_inputs, input_name, key):
-        try:
-            input_dict = step_inputs[input_name]
-            try:
-                return input_dict[key]
-            except KeyError:
-                msg = "Step '{}' didn't have '{}' in its output.".format(input_name, key)
-                raise StepsError(msg)
-        except KeyError:
-            msg = "Step '{}' doesn't have '{}' as its input step.".format(self.name, input_name)
-            raise StepsError(msg)
 
     def _get_steps(self, all_steps):
         for input_step in self.input_steps:
