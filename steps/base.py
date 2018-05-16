@@ -443,7 +443,7 @@ class BaseTransformer:
             kwargs: keyword arguments (can be anything)
 
         Returns:
-            obj: BaseTransformer instance
+            BaseTransformer: self object
         """
         return self
 
