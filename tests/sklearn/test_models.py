@@ -37,7 +37,7 @@ def y():
 def test_fit_transform(X, y, sklearn_class, steps_wrapper, transform_method):
     tr = steps_wrapper(sklearn_class(random_state=11235813))
     tr.fit(X, y)
-    tr_pred = tr.transform(X)['prediction']
+    tr_pred = tr.transform(X)[steps_wrapper.RESULT_KEY]
     rf = sklearn_class(random_state=11235813)
     rf.fit(X, y)
     rf_pred = getattr(rf, transform_method)(X)
@@ -54,11 +54,11 @@ def test_fit_transform(X, y, sklearn_class, steps_wrapper, transform_method):
 def test_save_load(X, y, tmpdir, sklearn_class, steps_wrapper):
     tr = steps_wrapper(sklearn_class())
     tr.fit(X, y)
-    before = tr.transform(X)['prediction']
+    before = tr.transform(X)[steps_wrapper.RESULT_KEY]
     print("Tmp dir:'{}'".format(tmpdir))
     path = str(Path(str(tmpdir)) / 'transformer.tmp')
     tr.save(path)
     loaded_tr = steps_wrapper(sklearn_class())
     loaded_tr.load(path)
-    after = loaded_tr.transform(X)['prediction']
+    after = loaded_tr.transform(X)[steps_wrapper.RESULT_KEY]
     assert np.array_equal(before, after)

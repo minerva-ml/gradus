@@ -245,7 +245,7 @@ class BaseTransformer:
         return self
 
     def transform(self, *args, **kwargs):
-        return NotImplementedError
+        raise NotImplementedError
 
     def fit_transform(self, *args, **kwargs):
         self.fit(*args, **kwargs)
@@ -273,3 +273,10 @@ class MockTransformer(BaseTransformer):
 class Dummy(BaseTransformer):
     def transform(self, **kwargs):
         return kwargs
+
+
+def make_transformer(fun):
+    class StaticTransformer(BaseTransformer):
+        def transform(self, *args, **kwargs):
+            return fun(*args, **kwargs)
+    return StaticTransformer()
