@@ -288,7 +288,7 @@ class Step:
         Args:
             name (str): name of the step to be fetched
         Returns:
-            obj: Step instance
+            Step: extracted step
         """
         return self.all_steps[name]
 
