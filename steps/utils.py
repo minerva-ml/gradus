@@ -74,7 +74,7 @@ def initialize_logger():
     It creates logger of name 'steps'
 
     Returns:
-        obj: logging.Logger object
+        logging.Logger: logger object
     """
     logger = logging.getLogger('steps')
     logger.setLevel(logging.INFO)
@@ -99,6 +99,6 @@ def get_logger():
     It fetches logger of name 'steps'
 
     Returns:
-        obj: logging.Logger object of name 'steps'
+        logging.Logger: logger object
     """
     return logging.getLogger('steps')
