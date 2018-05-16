@@ -15,56 +15,52 @@ from steps.utils import get_logger
 logger = get_logger()
 
 
-class SklearnClassifier(BaseTransformer):
+class SklearnBaseTransformer(BaseTransformer):
     def __init__(self, estimator):
         self.estimator = estimator
 
     def fit(self, X, y, **kwargs):
         self.estimator.fit(X, y)
         return self
+
+    def save(self, filepath):
+        joblib.dump(self.estimator, filepath)
+
+    def load(self, filepath):
+        self.estimator = joblib.load(filepath)
+        return self
+
+
+class SklearnClassifier(SklearnBaseTransformer):
+    RESULT_KEY = 'prediction'
 
     def transform(self, X, y=None, **kwargs):
         prediction = self.estimator.predict_proba(X)
-        return {'prediction': prediction}
+        return {SklearnClassifier.RESULT_KEY: prediction}
 
 
-class SklearnRegressor(BaseTransformer):
-    def __init__(self, estimator):
-        self.estimator = estimator
-
-    def fit(self, X, y, **kwargs):
-        self.estimator.fit(X, y)
-        return self
+class SklearnRegressor(SklearnBaseTransformer):
+    RESULT_KEY = 'prediction'
 
     def transform(self, X, y=None, **kwargs):
         prediction = self.estimator.predict(X)
-        return {'prediction': prediction}
+        return {SklearnRegressor.RESULT_KEY: prediction}
 
 
-class SklearnTransformer(BaseTransformer):
-    def __init__(self, estimator):
-        self.estimator = estimator
-
-    def fit(self, X, y, **kwargs):
-        self.estimator.fit(X, y)
-        return self
+class SklearnTransformer(SklearnBaseTransformer):
+    RESULT_KEY = 'transformed'
 
     def transform(self, X, y=None, **kwargs):
         transformed = self.estimator.transform(X)
-        return {'transformed': transformed}
+        return {SklearnTransformer.RESULT_KEY: transformed}
 
 
-class SklearnPipeline(BaseTransformer):
-    def __init__(self, estimator):
-        self.estimator = estimator
-
-    def fit(self, X, y, **kwargs):
-        self.estimator.fit(X, y)
-        return self
+class SklearnPipeline(SklearnBaseTransformer):
+    RESULT_KEY = 'transformed'
 
     def transform(self, X, y=None, **kwargs):
         transformed = self.estimator.transform(X)
-        return {'transformed': transformed}
+        return {SklearnPipeline.RESULT_KEY: transformed}
 
 
 class LightGBM(BaseTransformer):
