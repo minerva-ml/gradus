@@ -7,26 +7,21 @@ from IPython.display import Image, display
 
 
 def view_graph(graph_info):
-    """Performs fit followed by transform
-
-    This method simply combines fit and transform.
+    """Displays graph in the notebook
 
     Args:
-        args: positional arguments (can be anything)
-        kwargs: keyword arguments (can be anything)
+        graph_info (dict): graph dictionary with 'nodes' and 'edges' defined
     """
     graph = create_graph(graph_info)
     view_pydot(graph)
 
 
-def plot_graph(graph_info, filepath):
-    """Performs fit followed by transform
-
-    This method simply combines fit and transform.
+def save_graph(graph_info, filepath):
+    """Saves pydot graph to file
 
     Args:
-        args: positional arguments (can be anything)
-        kwargs: keyword arguments (can be anything)
+        graph_info (dict): graph dictionary with 'nodes' and 'edges' defined
+        filepath (str): filepath to which the graph should be saved
 
     """
     graph = create_graph(graph_info)

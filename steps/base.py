@@ -20,7 +20,7 @@ class Step:
     Step executes fit_transform on every step recursively starting from the very last step and making its way forward
     through the input_steps. If step transformer was fitted already then said transformer is loaded in and the transorm method
     is executed.
-    One can easily debug the data flow by plotting the pipeline graph with either step.plot_graph(filepath) method
+    One can easily debug the data flow by plotting the pipeline graph with either step.save_graph(filepath) method
     or simply returning it in a jupyter notebook cell.
     Every part of the pipeline can be easily accessed via step.get_step(name) method which makes it easy to reuse parts of the pipeline
     across multiple solutions.
@@ -292,7 +292,7 @@ class Step:
         """
         return self.all_steps[name]
 
-    def plot_graph(self, filepath):
+    def save_graph(self, filepath):
         """Creates pipeline graph and saves it to a file
 
         Pydot graph is created and saved to filepath. This feature is usefull for debugging purposes especially
@@ -301,7 +301,7 @@ class Step:
         Args:
             filepath (str): filepath where the graph should be saved
         """
-        plot_graph(self.graph_info, filepath)
+        save_graph(self.graph_info, filepath)
 
     def _copy_transformer(self, step, name, dirpath):
         self.transformer = self.transformer.transformer
@@ -459,7 +459,7 @@ class BaseTransformer:
             kwargs: keyword arguments (can be anything)
 
         Returns:
-            obj: BaseTransformer instance
+            dict: outputs
         """
         return NotImplementedError
 
@@ -473,13 +473,13 @@ class BaseTransformer:
             kwargs: keyword arguments (can be anything)
 
         Returns:
-            obj: BaseTransformer instance
+            dict: outputs
         """
         self.fit(*args, **kwargs)
         return self.transform(*args, **kwargs)
 
     def load(self, filepath):
-        """Saves the trainable parameters of the transformer
+        """Loads the trainable parameters of the transformer
 
         Specific implementation of loading persisted model parameters should be implemented here.
         In case of transformers that do not learn any parameters one can leave this method as is.
@@ -487,7 +487,7 @@ class BaseTransformer:
         Args:
             filepath (str): filepath from which the transformer should be loaded
         Returns:
-            obj: BaseTransformer instance
+            BaseTransformer: self instance
         """
         return self
 
