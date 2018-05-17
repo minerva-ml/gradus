@@ -29,16 +29,16 @@ class KerasModelTransformer(BaseTransformer):
         return model
 
     def _create_callbacks(self, **kwargs):
-        return NotImplementedError
+        raise NotImplementedError
 
     def _build_model(self, **kwargs):
-        return NotImplementedError
+        raise NotImplementedError
 
     def _build_optimizer(self, **kwargs):
-        return NotImplementedError
+        raise NotImplementedError
 
     def _build_loss(self, **kwargs):
-        return NotImplementedError
+        raise NotImplementedError
 
     def save(self, filepath):
         checkpoint_callback = self.callbacks_config.get('model_checkpoint')
@@ -72,25 +72,44 @@ class ClassifierXY(KerasModelTransformer):
 
 
 class ClassifierGenerator(KerasModelTransformer):
-    def fit(self, datagen, validation_datagen, *args, **kwargs):
+    def fit(self, datagen, X, y, datagen_valid=None, X_valid=None, y_valid=None, *args, **kwargs):
         self.callbacks = self._create_callbacks(**self.callbacks_config)
         self.model = self._compile_model(**self.architecture_config)
 
-        train_flow, train_steps = datagen
-        valid_flow, valid_steps = validation_datagen
-        self.model.fit_generator(train_flow,
-                                 steps_per_epoch=train_steps,
-                                 validation_data=valid_flow,
-                                 validation_steps=valid_steps,
-                                 callbacks=self.callbacks,
-                                 verbose=1,
-                                 **self.training_config)
-        return self
+        fit_args = self.training_config['fit_args']
+        flow_args = self.training_config['flow_args']
+        batch_size = flow_args['batch_size']
+        if X_valid is None:
+            self.model.fit_generator(
+                datagen.flow(X, y, **flow_args),
+                steps_per_epoch=len(X) // batch_size,
+                callbacks=self.callbacks,
+                **fit_args)
+            return self
+        else:
+            if datagen_valid is None:
+                datagen_valid = datagen
+            self.model.fit_generator(
+                datagen.flow(X, y, **flow_args),
+                steps_per_epoch=len(X) // batch_size,
+                validation_data=datagen_valid.flow(X_valid, y_valid, **flow_args),
+                validation_steps=len(X_valid) // batch_size,
+                callbacks=self.callbacks,
+                **fit_args)
+            return self
 
-    def transform(self, datagen, validation_datagen=None, *args, **kwargs):
-        test_flow, test_steps = datagen
-        predictions = self.model.predict_generator(test_flow, test_steps, verbose=1)
-        return {'prediction_probability': predictions}
+    def transform(self, datagen, X, datagen_valid=None, X_valid=None, *args, **kwargs):
+        flow_args = self.training_config['flow_args']
+        y_proba_train = self.model.predict_generator(
+            datagen.flow(X, shuffle=False, **flow_args))
+        result = dict(output=y_proba_train)
+        if X_valid is not None:
+            if datagen_valid is None:
+                datagen_valid = datagen
+            y_proba_valid = self.model.predict_generator(
+                datagen_valid.flow(X_valid, shuffle=False, **flow_args))
+            result.update(dict(output_valid=y_proba_valid))
+        return result
 
 
 class PretrainedEmbeddingModel(ClassifierXY):
