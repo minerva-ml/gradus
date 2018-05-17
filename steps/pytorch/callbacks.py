@@ -54,6 +54,8 @@ class Callback:
         self.batch_id += 1
 
     def get_validation_loss(self):
+        if self.validation_loss is None:
+            self.validation_loss = {}
         return self.validation_loss.setdefault(self.epoch_id, score_model(self.model,
                                                                           self.loss_function,
                                                                           self.validation_datagen))
