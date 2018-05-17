@@ -1,11 +1,12 @@
 import os
 import pprint
 import shutil
+from collections import defaultdict
 
 from sklearn.externals import joblib
 
-from .adapters import take_first_inputs
 from .utils import view_graph, plot_graph, get_logger, initialize_logger
+from .adapter import AdapterError
 
 initialize_logger()
 logger = get_logger()
@@ -29,8 +30,8 @@ class Step:
     def __init__(self,
                  name,
                  transformer,
-                 input_steps=[],
-                 input_data=[],
+                 input_steps=None,
+                 input_data=None,
                  adapter=None,
                  cache_dirpath=None,
                  cache_output=False,
@@ -128,11 +129,10 @@ class Step:
         """
 
         self.name = name
-
         self.transformer = transformer
 
-        self.input_steps = input_steps
-        self.input_data = input_data
+        self.input_steps = input_steps or []
+        self.input_data = input_data or []
         self.adapter = adapter
 
         self.force_fitting = force_fitting
@@ -371,29 +371,30 @@ class Step:
 
     def _adapt(self, step_inputs):
         logger.info('step {} adapting inputs'.format(self.name))
-        adapted_steps = {}
-        for adapted_name, mapping in self.adapter.items():
-            if isinstance(mapping, str):
-                adapted_steps[adapted_name] = step_inputs[mapping]
-            else:
-                if len(mapping) == 2:
-                    (step_mapping, func) = mapping
-                elif len(mapping) == 1:
-                    step_mapping = mapping
-                    func = take_first_inputs
-                else:
-                    raise ValueError('wrong mapping specified')
-
-                raw_inputs = [step_inputs[step_name][step_var] for step_name, step_var in step_mapping]
-                adapted_steps[adapted_name] = func(raw_inputs)
-        return adapted_steps
+        try:
+            return self.adapter.adapt(step_inputs)
+        except AdapterError as e:
+            msg = "Error while adapting step '{}'".format(self.name)
+            raise StepsError(msg) from e
 
     def _unpack(self, step_inputs):
         logger.info('step {} unpacking inputs'.format(self.name))
         unpacked_steps = {}
+        key_to_step_names = defaultdict(list)
         for step_name, step_dict in step_inputs.items():
-            unpacked_steps = {**unpacked_steps, **step_dict}
-        return unpacked_steps
+            unpacked_steps.update(step_dict)
+            for key in step_dict.keys():
+                key_to_step_names[key].append(step_name)
+
+        repeated_keys = [(key, step_names) for key, step_names in key_to_step_names.items()
+                         if len(step_names) > 1]
+        if len(repeated_keys) == 0:
+            return unpacked_steps
+        else:
+            msg = "Could not unpack inputs. Following keys are present in multiple input steps:\n"\
+                "\n".join(["  '{}' present in steps {}".format(key, step_names)
+                           for key, step_names in repeated_keys])
+            raise StepsError(msg)
 
     def _get_steps(self, all_steps):
         for input_step in self.input_steps:
@@ -514,3 +515,7 @@ class NoOperation(BaseTransformer):
     """
     def transform(self, **kwargs):
         return kwargs
+
+
+class StepsError(Exception):
+    pass
