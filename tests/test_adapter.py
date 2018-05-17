@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from steps.adapter import Adapter, E
+from steppy.adapter import Adapter, E
 
 
 @pytest.fixture

@@ -5,8 +5,8 @@ from collections import defaultdict
 
 from sklearn.externals import joblib
 
-from .utils import view_graph, save_graph, get_logger, initialize_logger
-from .adapter import AdapterError
+from steppy.utils import view_graph, save_graph, get_logger, initialize_logger
+from steppy.adapter import AdapterError
 
 initialize_logger()
 logger = get_logger()
