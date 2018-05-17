@@ -79,7 +79,7 @@ def initialize_logger():
     logger = logging.getLogger('steps')
     logger.setLevel(logging.INFO)
     message_format = logging.Formatter(fmt='%(asctime)s %(name)s >>> %(message)s',
-                                       datefmt='%Y-%m-%d %H-%M-%S')
+                                       datefmt='%Y-%m-%d %H:%M:%S')
 
     # console handler for validation info
     ch_va = logging.StreamHandler(sys.stdout)
