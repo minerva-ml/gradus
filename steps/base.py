@@ -462,7 +462,7 @@ class BaseTransformer:
         Returns:
             dict: outputs
         """
-        return NotImplementedError
+        raise NotImplementedError
 
     def fit_transform(self, *args, **kwargs):
         """Performs fit followed by transform
@@ -519,3 +519,10 @@ class NoOperation(BaseTransformer):
 
 class StepsError(Exception):
     pass
+
+
+def make_transformer(fun):
+    class StaticTransformer(BaseTransformer):
+        def transform(self, *args, **kwargs):
+            return fun(*args, **kwargs)
+    return StaticTransformer()
