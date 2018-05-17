@@ -26,6 +26,7 @@ class Model(BaseTransformer):
         self.optimizer = None
         self.loss_function = None
         self.callbacks = None
+        self.validation_loss = None
 
     @property
     def output_names(self):
