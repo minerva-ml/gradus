@@ -1,4 +1,16 @@
+# IDE files
 .idea/
-.ipynb_checkpoints/
+
+# Generated files
 *.pyc
+*.log
+.pytest_cache
+
+# Working directories
 examples/cache/
+tests/.cache
+
+# Unwanted notebook files
+Untitled*.ipynb
+.ipynb_checkpoints/
+
