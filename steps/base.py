@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from sklearn.externals import joblib
 
-from .utils import view_graph, plot_graph, get_logger, initialize_logger
+from .utils import view_graph, save_graph, get_logger, initialize_logger
 from .adapter import AdapterError
 
 initialize_logger()
