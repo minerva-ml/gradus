@@ -41,7 +41,7 @@ class MultiPipeline(object):
                                       ' instance')
         self._check_add_step(transformer, node_name)
         self._connect_input_mapping(node_name, input_mapping)
-        self._connect_superv_mapping(node_name, input_mapping)
+        self._connect_superv_mapping(node_name, superv_mapping)
 
     def add_unsuperv(self, transformer: UnsupervTransformer, node_name: str,
                      input_mapping: dict):
