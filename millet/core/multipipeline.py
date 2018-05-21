@@ -39,30 +39,9 @@ class MultiPipeline(object):
         if not isinstance(transformer, SupervTransformer):
             raise MilletTypeException('transformer must be a SupervTransformer'
                                       ' instance')
-
         self._check_add_step(transformer, node_name)
-
-        for new_data_key, src_name_and_data_key in input_mapping.items():
-            src_name, src_key = src_name_and_data_key
-
-            if not self._graph.has_edge(src_name, node_name):
-                self._graph.add_edge(src_name, node_name)
-
-            if not ('source_data_keys' in self._graph.edges[src_name, node_name]):
-                self._graph.edges[src_name, node_name]['source_data_keys'] = {}
-
-            self._graph.edges[src_name, node_name]['source_data_keys'][new_data_key] = src_key
-
-        for new_data_key, src_name_and_data_key in superv_mapping.items():
-            src_name, src_key = src_name_and_data_key
-
-            if not self._graph.has_edge(src_name, node_name):
-                self._graph.add_edge(src_name, node_name)
-
-            if not ('source_superv_keys' in self._graph.edges[src_name, node_name]):
-                self._graph.edges[src_name, node_name]['source_superv_keys'] = {}
-
-            self._graph.edges[src_name, node_name]['source_superv_keys'][new_data_key] = src_key
+        self._connect_input_mapping(node_name, input_mapping)
+        self._connect_superv_mapping(node_name, input_mapping)
 
     def add_unsuperv(self, transformer: UnsupervTransformer, node_name: str,
                      input_mapping: dict):
@@ -77,8 +56,10 @@ class MultiPipeline(object):
         if not isinstance(transformer, UnsupervTransformer):
             raise MilletTypeException('transformer must be an UnsupervTransformer'
                                       ' instance')
-
         self._check_add_step(transformer, node_name)
+        self._connect_input_mapping(node_name, input_mapping)
+
+    def _connect_input_mapping(self, node_name, input_mapping):
 
         # TODO: very similar code repeated: refactor?
         for new_data_key, src_name_and_data_key in input_mapping.items():
@@ -91,6 +72,19 @@ class MultiPipeline(object):
                 self._graph.edges[src_name, node_name]['source_data_keys'] = {}
 
             self._graph.edges[src_name, node_name]['source_data_keys'][new_data_key] = src_key
+
+    def _connect_superv_mapping(self, node_name, superv_mapping):
+
+        for new_data_key, src_name_and_data_key in superv_mapping.items():
+            src_name, src_key = src_name_and_data_key
+
+            if not self._graph.has_edge(src_name, node_name):
+                self._graph.add_edge(src_name, node_name)
+
+            if not ('source_superv_keys' in self._graph.edges[src_name, node_name]):
+                self._graph.edges[src_name, node_name]['source_superv_keys'] = {}
+
+            self._graph.edges[src_name, node_name]['source_superv_keys'][new_data_key] = src_key
 
     def get_step_output(self, node_name: str):
         return self._graph.nodes[node_name]['output']
