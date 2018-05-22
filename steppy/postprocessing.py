@@ -61,17 +61,9 @@ class PredictionAverageUnstack(BaseTransformer):
 
 class ProbabilityCalibration(BaseTransformer):
     def __init__(self, power):
+        super().__init__()
         self.power = power
 
-    def fit(self, prediction_proba):
-        return self
-
-    def transform(self, prediction_probability):
-        prediction_probability = np.array(prediction_probability) ** self.power
-        return {'prediction_probability': prediction_probability}
-
-    def load(self, filepath):
-        return self
-
-    def save(self, filepath):
-        joblib.dump({}, filepath)
+    def transform(self, predicted_probability):
+        predicted_probability = np.array(predicted_probability) ** self.power
+        return {'predicted_probability': predicted_probability}
