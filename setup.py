@@ -8,4 +8,5 @@ setup(name='steppy',
       author_email=' ml-team@neptune.ml',
       license='MIT',
       packages=['steppy'],
-      zip_safe=False)
+      zip_safe=False
+      )
