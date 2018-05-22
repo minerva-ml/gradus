@@ -1,4 +1,4 @@
-from typing import Dict, Union, Tuple, List, Dict, Any, NamedTuple
+from typing import Tuple, List, Dict, Any, NamedTuple
 
 E = NamedTuple('E', [('input_name', str), ('key', str)])
 

@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 from steppy.adapter import Adapter, E
 

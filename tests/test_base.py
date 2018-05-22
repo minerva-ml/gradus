@@ -1,8 +1,7 @@
-import pytest
 import numpy as np
+import pytest
 
-from steppy.base import Step, NoOperation, StepsError, make_transformer
-
+from steppy.base import Step, IdentityOperation, StepsError, make_transformer
 from .steps_test_utils import CACHE_DIRPATH
 
 
@@ -49,7 +48,7 @@ def test_make_transformer(mode):
 def test_inputs_without_conflicting_names_do_not_require_adapter(data):
     step = Step(
         name='test_inputs_without_conflicting_names_do_not_require_adapter_1',
-        transformer=NoOperation(),
+        transformer=IdentityOperation(),
         input_data=['input_1'],
         cache_dirpath=CACHE_DIRPATH
     )
@@ -58,7 +57,7 @@ def test_inputs_without_conflicting_names_do_not_require_adapter(data):
 
     step = Step(
         name='test_inputs_without_conflicting_names_do_not_require_adapter_2',
-        transformer=NoOperation(),
+        transformer=IdentityOperation(),
         input_data=['input_1', 'input_2'],
         cache_dirpath=CACHE_DIRPATH
     )
@@ -69,7 +68,7 @@ def test_inputs_without_conflicting_names_do_not_require_adapter(data):
 def test_inputs_with_conflicting_names_require_adapter(data):
     step = Step(
         name='test_inputs_with_conflicting_names_require_adapter',
-        transformer=NoOperation(),
+        transformer=IdentityOperation(),
         input_data=['input_1', 'input_3'],
         cache_dirpath=CACHE_DIRPATH
     )

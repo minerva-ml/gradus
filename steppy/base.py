@@ -5,8 +5,8 @@ from collections import defaultdict
 
 from sklearn.externals import joblib
 
-from steppy.utils import view_graph, save_graph, get_logger, initialize_logger
 from steppy.adapter import AdapterError
+from steppy.utils import view_graph, save_graph, get_logger, initialize_logger
 
 initialize_logger()
 logger = get_logger()
@@ -41,7 +41,7 @@ class Step:
                  force_fitting=False):
         """
         Args:
-            name (int): Step name. Each step in a pipeline needs to have a unique name.
+            name (str): Step name. Each step in a pipeline needs to have a unique name.
                 Transformers, and Step outputs will be persisted/cached/saved under this exact name.
             transformer (obj): Step instance or object that inherits from BaseTransformer.
                 When Step instance is passed transformer from that Step will be copied and used to perform transformations.
@@ -504,11 +504,11 @@ class BaseTransformer:
         joblib.dump({}, filepath)
 
 
-class NoOperation(BaseTransformer):
-    """Transformer that performs no operation.
+class IdentityOperation(BaseTransformer):
+    """Transformer that performs identity operation, f(x)=x.
 
-    It is sometimes usefull to organize the outputs from previous steps, join them together or rename them before
-    passing to the next step. Typical usecase would be to join features extracted with
+    It is sometimes useful to organize the outputs from previous steps, join them together or rename them before
+    passing to the next step. Typical use-case would be to join features extracted with
     multiple transformers into one object called joined_features. In that case the adapter attribute is used to define
     the mapping/joining scheme.
 
