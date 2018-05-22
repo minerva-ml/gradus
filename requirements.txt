@@ -1,0 +1,6 @@
+attrdict==2.0.0
+numpy==1.14.3
+scikit-learn==0.19.1
+scipy==1.1.0
+six==1.11.0
+sklearn==0.0
