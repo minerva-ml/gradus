@@ -25,7 +25,6 @@ class Step:
     or simply returning it in a jupyter notebook cell.
     Every part of the pipeline can be easily accessed via step.get_step(name) method which makes it easy to reuse parts of the pipeline
     across multiple solutions.
-    For detailed examples go to the notebooks section.
     """
     def __init__(self,
                  name,
