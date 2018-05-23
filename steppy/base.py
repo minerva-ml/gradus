@@ -5,8 +5,8 @@ from collections import defaultdict
 
 from sklearn.externals import joblib
 
-from .utils import view_graph, save_graph, get_logger, initialize_logger
-from .adapter import AdapterError
+from steppy.adapter import AdapterError
+from steppy.utils import view_graph, save_graph, get_logger, initialize_logger
 
 initialize_logger()
 logger = get_logger()
@@ -19,13 +19,12 @@ class Step:
     It handles multiple input/output data flows, has build-in persistence/caching of both models (transformers) and
     intermediate step outputs.
     Step executes fit_transform on every step recursively starting from the very last step and making its way forward
-    through the input_steps. If step transformer was fitted already then said transformer is loaded in and the transorm method
+    through the input_steps. If step transformer was fitted already then said transformer is loaded in and the transform method
     is executed.
     One can easily debug the data flow by plotting the pipeline graph with either step.save_graph(filepath) method
     or simply returning it in a jupyter notebook cell.
     Every part of the pipeline can be easily accessed via step.get_step(name) method which makes it easy to reuse parts of the pipeline
     across multiple solutions.
-    For detailed examples go to the notebooks section.
     """
     def __init__(self,
                  name,
@@ -41,11 +40,11 @@ class Step:
                  force_fitting=False):
         """
         Args:
-            name (int): Step name. Each step in a pipeline needs to have a unique name.
+            name (str): Step name. Each step in a pipeline needs to have a unique name.
                 Transformers, and Step outputs will be persisted/cached/saved under this exact name.
             transformer (obj): Step instance or object that inherits from BaseTransformer.
                 When Step instance is passed transformer from that Step will be copied and used to perform transformations.
-                It is useful when both train and valid data are passed in one pipeline (common situation in deep learnining).
+                It is useful when both train and valid data are passed in one pipeline (common situation in deep learning).
             input_steps (list): list of Step instances default []. Current step will combine outputs from input_steps and input_data
                 and pass to the transformer methods fit_transform and transform.
             input_data (list): list of str default []. Elements of this list are keys in the data dictionary that is passed
@@ -420,9 +419,9 @@ class Step:
 
 
 class BaseTransformer:
-    """Abstraction on two level fit/transform execution.
+    """Abstraction on two level fit and transform execution.
 
-    Basetransformer is an abstraction strongly inspired by the sklearn.Transformer sklearn.Estimator.
+    Base transformer is an abstraction strongly inspired by the sklearn.Transformer sklearn.Estimator.
     Two main concepts are:
         1. Every action that can be performed on data (transformation, model training) can be performed in two steps
         fitting (where trainable parameters are estimated) and transforming (where previously estimated parameters are used
@@ -430,6 +429,9 @@ class BaseTransformer:
         2. Every transformer knows how it should be saved and loaded (especially useful when working with Keras/Pytorch and Sklearn)
         in one pipeline
     """
+
+    def __init__(self):
+        self.estimator = None
 
     def fit(self, *args, **kwargs):
         """Performs estimation of trainable parameters
@@ -504,11 +506,11 @@ class BaseTransformer:
         joblib.dump({}, filepath)
 
 
-class NoOperation(BaseTransformer):
-    """Transformer that performs no operation.
+class IdentityOperation(BaseTransformer):
+    """Transformer that performs identity operation, f(x)=x.
 
-    It is sometimes usefull to organize the outputs from previous steps, join them together or rename them before
-    passing to the next step. Typical usecase would be to join features extracted with
+    It is sometimes useful to organize the outputs from previous steps, join them together or rename them before
+    passing to the next step. Typical use-case would be to join features extracted with
     multiple transformers into one object called joined_features. In that case the adapter attribute is used to define
     the mapping/joining scheme.
 
@@ -521,8 +523,8 @@ class StepsError(Exception):
     pass
 
 
-def make_transformer(fun):
+def make_transformer(func):
     class StaticTransformer(BaseTransformer):
         def transform(self, *args, **kwargs):
-            return fun(*args, **kwargs)
+            return func(*args, **kwargs)
     return StaticTransformer()

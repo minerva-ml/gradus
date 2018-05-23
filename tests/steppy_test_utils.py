@@ -1,8 +1,8 @@
 import logging
 import os
 import shutil
-from pathlib import Path
 
+from pathlib import Path
 
 CACHE_DIRPATH = '.cache'
 LOGS_PATH = 'steps.log'
