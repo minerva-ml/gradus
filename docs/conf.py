@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'steppy'
-copyright = '2018, minerva.ml'
-author = 'minerva.ml'
+copyright = '2018, neptune.ml'
+author = 'neptune.ml'
 
 # The short X.Y version
-version = ''
+version = '0.1'
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '0.1.1'
 
 
 # -- General configuration ---------------------------------------------------
