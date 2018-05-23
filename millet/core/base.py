@@ -45,7 +45,7 @@ class UnsupervTransformer(BaseTransformer):
         return self.transform(input_dict)
 
 
-class DataLoader(BaseStep):
+class BaseDataLoader(BaseStep):
     """Base class for steps which load data
     """
 

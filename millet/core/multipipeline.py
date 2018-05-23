@@ -1,7 +1,7 @@
 from functools import reduce
 import networkx as nx
 from networkx.algorithms.dag import ancestors, lexicographical_topological_sort
-from .base import BaseStep, SupervTransformer, UnsupervTransformer, DataLoader
+from .base import BaseStep, BaseTransformer, SupervTransformer, UnsupervTransformer, BaseDataLoader
 from .utils import MilletException, MilletTypeException, MilletNameException
 
 
@@ -16,11 +16,19 @@ class MultiPipeline(object):
                                       'already exists in this multipipeline')
         self._graph.add_node(node_name, step=step, output=None)
 
-    def add_dataloader(self, dataloader: DataLoader, node_name: str):
-        if not isinstance(dataloader, DataLoader):
+    def add_dataloader(self, dataloader: BaseDataLoader, node_name: str):
+        if not isinstance(dataloader, BaseDataLoader):
             raise MilletTypeException('dataloader must be a DataLoader'
                                       ' instance')
         self._check_add_step(dataloader, node_name)
+
+    def get_dataloader_node_names(self):
+        return list([node_nm for node_nm in self._graph.nodes
+                     if isinstance(self.get_step(node_nm), BaseDataLoader)])
+
+    def get_transformer_node_names(self):
+        return list([node_nm for node_nm in self._graph.nodes
+                     if isinstance(self.get_step(node_nm), BaseTransformer)])
 
     def get_step(self, node_name: str):
         return self._graph.nodes[node_name]['step']
@@ -121,7 +129,7 @@ class MultiPipeline(object):
             step = node['step']
 
             # Only BaseDataLoader descendants should be able to load data
-            if isinstance(step, DataLoader):
+            if isinstance(step, BaseDataLoader):
                 print(f'[MultiPipeline]   Calling load_data')
                 node['output'] = step.load_data(input_info)
 
@@ -180,6 +188,17 @@ class MultiPipeline(object):
 
     def draw(self):
         pos = nx.circular_layout(self._graph)
-        nx.draw_networkx_nodes(self._graph, pos, node_color='g', alpha=0.3, node_size=350)
+        nx.draw_networkx_nodes(self._graph,
+                               pos,
+                               nodelist=self.get_dataloader_node_names(),
+                               node_color='tab:orange',
+                               alpha=0.5,
+                               node_size=350)
+        nx.draw_networkx_nodes(self._graph,
+                               pos,
+                               nodelist=self.get_transformer_node_names(),
+                               node_color='tab:blue',
+                               alpha=0.5,
+                               node_size=350)
         nx.draw_networkx_labels(self._graph, pos)
         nx.draw_networkx_edges(self._graph, pos, arrows=True)

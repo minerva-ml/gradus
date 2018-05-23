@@ -1,6 +1,6 @@
 import pytest
 from millet.core.base import BaseStep
-from millet import SupervTransformer, UnsupervTransformer, DataLoader
+from millet import SupervTransformer, UnsupervTransformer, BaseDataLoader
 
 
 # Classes for testing
@@ -26,7 +26,7 @@ class DummyUnsupervTransformer(UnsupervTransformer):
         return {}
 
 
-class DummyDataLoader(DataLoader):
+class DummyDataLoader(BaseDataLoader):
     def load_data(self, input_info: dict) -> dict:
         return {}
 

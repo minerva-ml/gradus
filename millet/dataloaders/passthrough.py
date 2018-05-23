@@ -1,7 +1,7 @@
-from ..core.base import DataLoader
+from ..core.base import BaseDataLoader
 
 
-class PassThroughDataLoader(DataLoader):
+class PassThroughDataLoader(BaseDataLoader):
     """Most basic data loader step - prefer to use one with gatekeeping instead
     """
 

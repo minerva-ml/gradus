@@ -1,1 +1,1 @@
-from .core import SupervTransformer, UnsupervTransformer, DataLoader, MultiPipeline
+from .core import SupervTransformer, UnsupervTransformer, BaseDataLoader, MultiPipeline

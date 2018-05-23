@@ -1,5 +1,5 @@
 import pytest
-from millet import MultiPipeline, SupervTransformer, UnsupervTransformer, DataLoader
+from millet import MultiPipeline, SupervTransformer, UnsupervTransformer, BaseDataLoader
 from millet.core import MilletTypeException, MilletNameException
 
 
@@ -26,7 +26,7 @@ class SimpleUnsupervTransformer(UnsupervTransformer):
         return output_dict
 
 
-class SimpleDataLoader(DataLoader):
+class SimpleDataLoader(BaseDataLoader):
     def load_data(self, input_info: dict) -> dict:
         output_dict = {'X': input_info['X']}
         return output_dict
