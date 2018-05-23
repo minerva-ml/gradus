@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from steppy.base import Step, IdentityOperation, StepsError, make_transformer
-from .steps_test_utils import CACHE_DIRPATH
+from .steppy_test_utils import CACHE_DIRPATH
 
 
 @pytest.fixture
