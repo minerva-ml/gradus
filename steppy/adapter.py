@@ -14,10 +14,57 @@ class AdapterError(Exception):
 
 
 class Adapter:
+    """Translates outputs from parent steps to inputs to the current step
+
+    Attributes:
+        adapting_recipes: The recipes that the adapter was initialized with
+
+    """
     def __init__(self, adapting_recipes: Dict[str, AdaptingRecipe]):
+        """Adapter constructor
+
+        Note:
+            You have to import the extractor E from this module to construct
+            adapters
+
+        Args:
+            adapting_recipes: Recipes used to control the input translation.
+                This should be a dict where the keys match the arguments
+                expected by the transformer included in the step and the values
+                can each be any of the following:
+
+                1. E('input_name', 'key') will query the parent step
+                    'input_name' for the output 'key'
+
+                2. List of E('input_name', 'key') will apply the extractors
+                    to the parent steps and combine the results into a list
+
+                3. Tuple of E('input_name', 'key') will apply the extractors
+                    to the parent steps and combine the results into a tuple
+
+                4. Dict like {k: E('input_name', 'key')} will apply the
+                    extractors to the parent steps and combine the results
+                    into a dict with the same keys
+
+                5. Anything else: the value itself will be used as the argument
+                    to the transformer
+
+        """
         self.adapting_recipes = adapting_recipes
 
     def adapt(self, all_inputs: AllInputs) -> Dict[str, Any]:
+        """Adapt inputs for the transformer included in the step
+
+        Args:
+            all_inputs: Dict of outputs from parent steps. The keys should
+            match the names of these steps and the values should be their
+            respective outputs.
+
+        Returns:
+            adapted: Dict with the same keys as adapting_recipes and values
+            constructed according to the respective recipes
+
+        """
         adapted = {}
         for name, recipe in self.adapting_recipes.items():
             adapted[name] = self._construct(all_inputs, recipe)
