@@ -1,4 +1,4 @@
-import steps.base  # To make sure logger is initialized before running prepare_steps_logger
+import steppy.base  # To make sure logger is initialized before running prepare_steps_logger
 
 from .steps_test_utils import prepare_steps_logger, remove_cache
 

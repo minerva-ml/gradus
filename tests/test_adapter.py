@@ -1,7 +1,7 @@
-import pytest
 import numpy as np
+import pytest
 
-from steps.adapter import Adapter, E
+from steppy.adapter import Adapter, E
 
 
 @pytest.fixture
@@ -39,6 +39,7 @@ def test_adapter_creates_defined_keys(data):
         'Y': [E('input_2', 'extra_features')]
     })
     res = adapter.adapt(data)
+
     assert {'X', 'Y'} == set(res.keys())
 
 
@@ -48,6 +49,7 @@ def test_recipe_with_single_item(data):
         'Y': E('input_3', 'labels'),
     })
     res = adapter.adapt(data)
+
     assert np.array_equal(res['X'], data['input_1']['labels'])
     assert np.array_equal(res['Y'], data['input_3']['labels'])
 
@@ -56,18 +58,16 @@ def test_recipe_with_list(data):
     adapter = Adapter({
         'X': [],
         'Y': [E('input_1', 'features')],
-        'Z': [E('input_1', 'features'), E('input_2', 'extra_features')]
+        'Z': [E('input_1', 'features'),
+              E('input_2', 'extra_features')]
     })
     res = adapter.adapt(data)
-
     for i, key in enumerate(('X', 'Y', 'Z')):
         assert isinstance(res[key], list)
         assert len(res[key]) == i
 
     assert res['X'] == []
-
     assert np.array_equal(res['Y'][0], data['input_1']['features'])
-
     assert np.array_equal(res['Z'][0], data['input_1']['features'])
     assert np.array_equal(res['Z'][1], data['input_2']['extra_features'])
 
@@ -85,9 +85,7 @@ def test_recipe_with_tuple(data):
         assert len(res[key]) == i
 
     assert res['X'] == ()
-
     assert np.array_equal(res['Y'][0], data['input_1']['features'])
-
     assert np.array_equal(res['Z'][0], data['input_1']['features'])
     assert np.array_equal(res['Z'][1], data['input_2']['extra_features'])
 
@@ -96,7 +94,8 @@ def test_recipe_with_dictionary(data):
     adapter = Adapter({
         'X': {},
         'Y': {'a': E('input_1', 'features')},
-        'Z': {'a': E('input_1', 'features'), 'b': E('input_2', 'extra_features')}
+        'Z': {'a': E('input_1', 'features'),
+              'b': E('input_2', 'extra_features')}
     })
     res = adapter.adapt(data)
 
@@ -105,9 +104,7 @@ def test_recipe_with_dictionary(data):
         assert len(res[key]) == i
 
     assert res['X'] == {}
-
     assert np.array_equal(res['Y']['a'], data['input_1']['features'])
-
     assert np.array_equal(res['Z']['a'], data['input_1']['features'])
     assert np.array_equal(res['Z']['b'], data['input_2']['extra_features'])
 
