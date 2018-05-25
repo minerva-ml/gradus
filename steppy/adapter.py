@@ -1,8 +1,4 @@
-from typing import Tuple, List, Dict, Any, NamedTuple
-
-E = NamedTuple('E', [('input_name', str),
-                     ('key', str)]
-               )
+from typing import Tuple, List, Dict, Any
 
 AdaptingRecipe = Any
 Results = Dict[str, Any]
@@ -23,28 +19,25 @@ class Adapter:
     def __init__(self, adapting_recipes: Dict[str, AdaptingRecipe]):
         """Adapter constructor
 
-        Note:
-            You have to import the extractor E from this module to construct
-            adapters
-
         Args:
             adapting_recipes: Recipes used to control the input translation.
                 This should be a dict where the keys match the arguments
                 expected by the transformer included in the step and the values
                 can each be any of the following:
 
-                1. E('input_name', 'key') will query the parent step
+                1. ('input_name', 'key') will query the parent step
                     'input_name' for the output 'key'
 
-                2. List of E('input_name', 'key') will apply the extractors
-                    to the parent steps and combine the results into a list
+                2. List of ('input_name', 'key') will query each parent step
+                    with a name specified in 'input_name' for its respective
+                    key and combine the results into a list
 
-                3. Tuple of E('input_name', 'key') will apply the extractors
-                    to the parent steps and combine the results into a tuple
+                3. Tuple of ('input_name', 'key') is the same as list of
+                    ('input_name', 'key') except that a tuple is returned
 
-                4. Dict like {k: E('input_name', 'key')} will apply the
-                    extractors to the parent steps and combine the results
-                    into a dict with the same keys
+                4. Dict like {k: ('input_name', 'key')} is the same as list of
+                    ('input_name', 'key') except that a dict with keys k
+                    is returned
 
                 5. Anything else: the value itself will be used as the argument
                     to the transformer
@@ -71,19 +64,29 @@ class Adapter:
         return adapted
 
     def _construct(self, all_inputs: AllInputs, recipe: AdaptingRecipe) -> Any:
-        return {
-            E: self._construct_element,
-            tuple: self._construct_tuple,
-            list: self._construct_list,
-            dict: self._construct_dict,
-        }.get(recipe.__class__, self._construct_constant)(all_inputs, recipe)
+        if isinstance(recipe, tuple):
+            # Deduce if this is a basic recipe or a tuple of recipes
+            if (len(recipe) == 2
+                    and isinstance(recipe[0], str)
+                    and isinstance(recipe[1], str)):
+                res = self._construct_element(all_inputs, recipe)
+            else:
+                res = self._construct_tuple(all_inputs, recipe)
+        elif isinstance(recipe, list):
+            res = self._construct_list(all_inputs, recipe)
+        elif isinstance(recipe, dict):
+            res = self._construct_dict(all_inputs, recipe)
+        else:
+            res = self._construct_constant(all_inputs, recipe)
+
+        return res
 
     def _construct_constant(self, _: AllInputs, constant) -> Any:
         return constant
 
-    def _construct_element(self, all_inputs: AllInputs, element: E):
-        input_name = element.input_name
-        key = element.key
+    def _construct_element(self, all_inputs: AllInputs, element: Tuple[str, str]):
+        input_name = element[0]
+        key = element[1]
         try:
             input_results = all_inputs[input_name]
             try:
@@ -101,6 +104,6 @@ class Adapter:
     def _construct_tuple(self, all_inputs: AllInputs, tup: Tuple):
         return tuple(self._construct(all_inputs, recipe) for recipe in tup)
 
-    def _construct_dict(self, all_inputs: AllInputs, dic: Dict[AdaptingRecipe, AdaptingRecipe]):
+    def _construct_dict(self, all_inputs: AllInputs, dic: Dict[Any, AdaptingRecipe]):
         return {self._construct(all_inputs, k): self._construct(all_inputs, v)
                 for k, v in dic.items()}

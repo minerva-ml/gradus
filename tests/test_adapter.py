@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from steppy.adapter import Adapter, E
+from steppy.adapter import Adapter
 
 
 @pytest.fixture
@@ -35,18 +35,18 @@ def data():
 
 def test_adapter_creates_defined_keys(data):
     adapter = Adapter({
-        'X': [E('input_1', 'features')],
-        'Y': [E('input_2', 'extra_features')]
+        'X': [('input_1', 'features')],
+        'Y': [('input_2', 'extra_features')]
     })
     res = adapter.adapt(data)
 
     assert {'X', 'Y'} == set(res.keys())
 
 
-def test_recipe_with_single_item(data):
+def test_recipe_with_basic_recipe(data):
     adapter = Adapter({
-        'X': E('input_1', 'labels'),
-        'Y': E('input_3', 'labels'),
+        'X': ('input_1', 'labels'),
+        'Y': ('input_3', 'labels'),
     })
     res = adapter.adapt(data)
 
@@ -57,9 +57,9 @@ def test_recipe_with_single_item(data):
 def test_recipe_with_list(data):
     adapter = Adapter({
         'X': [],
-        'Y': [E('input_1', 'features')],
-        'Z': [E('input_1', 'features'),
-              E('input_2', 'extra_features')]
+        'Y': [('input_1', 'features')],
+        'Z': [('input_1', 'features'),
+              ('input_2', 'extra_features')]
     })
     res = adapter.adapt(data)
     for i, key in enumerate(('X', 'Y', 'Z')):
@@ -75,8 +75,8 @@ def test_recipe_with_list(data):
 def test_recipe_with_tuple(data):
     adapter = Adapter({
         'X': (),
-        'Y': (E('input_1', 'features'),),
-        'Z': (E('input_1', 'features'), E('input_2', 'extra_features'))
+        'Y': (('input_1', 'features'),),
+        'Z': (('input_1', 'features'), ('input_2', 'extra_features'))
     })
     res = adapter.adapt(data)
 
@@ -93,9 +93,9 @@ def test_recipe_with_tuple(data):
 def test_recipe_with_dictionary(data):
     adapter = Adapter({
         'X': {},
-        'Y': {'a': E('input_1', 'features')},
-        'Z': {'a': E('input_1', 'features'),
-              'b': E('input_2', 'extra_features')}
+        'Y': {'a': ('input_1', 'features')},
+        'Z': {'a': ('input_1', 'features'),
+              'b': ('input_2', 'extra_features')}
     })
     res = adapter.adapt(data)
 
@@ -114,24 +114,22 @@ def test_recipe_with_constants(data):
         'A': 112358,
         'B': 3.14,
         'C': "lorem ipsum",
-        'D': ('input_1', 'features'),
-        'E': {112358: 112358, 'a': 'a', 3.14: 3.14},
-        'F': [112358, 3.14, "lorem ipsum", ('input_1', 'features')]
+        'D': {112358: 112358, 'a': 'a', 3.14: 3.14},
+        'E': [112358, 3.14, "lorem ipsum"]
     })
     res = adapter.adapt(data)
 
     assert res['A'] == 112358
     assert res['B'] == 3.14
     assert res['C'] == "lorem ipsum"
-    assert res['D'] == ('input_1', 'features')
-    assert res['E'] == {112358: 112358, 'a': 'a', 3.14: 3.14}
-    assert res['F'] == [112358, 3.14, "lorem ipsum", ('input_1', 'features')]
+    assert res['D'] == {112358: 112358, 'a': 'a', 3.14: 3.14}
+    assert res['E'] == [112358, 3.14, "lorem ipsum"]
 
 
 def test_nested_recipes(data):
     adapter = Adapter({
-        'X': [{'a': [E('input_1', 'features')]}],
-        'Y': {'a': [{'b': E('input_2', 'extra_features')}]}
+        'X': [{'a': [('input_1', 'features')]}],
+        'Y': {'a': [{'b': ('input_2', 'extra_features')}]}
     })
     res = adapter.adapt(data)
 
