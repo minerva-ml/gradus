@@ -50,7 +50,7 @@ def test_inputs_without_conflicting_names_do_not_require_adapter(data):
         name='test_inputs_without_conflicting_names_do_not_require_adapter_1',
         transformer=IdentityOperation(),
         input_data=['input_1'],
-        cache_dirpath=CACHE_DIRPATH
+        experiment_directory=CACHE_DIRPATH
     )
     output = step.fit_transform(data)
     assert output == data['input_1']
@@ -59,7 +59,7 @@ def test_inputs_without_conflicting_names_do_not_require_adapter(data):
         name='test_inputs_without_conflicting_names_do_not_require_adapter_2',
         transformer=IdentityOperation(),
         input_data=['input_1', 'input_2'],
-        cache_dirpath=CACHE_DIRPATH
+        experiment_directory=CACHE_DIRPATH
     )
     output = step.fit_transform(data)
     assert output == {**data['input_1'], **data['input_2']}
@@ -70,7 +70,7 @@ def test_inputs_with_conflicting_names_require_adapter(data):
         name='test_inputs_with_conflicting_names_require_adapter',
         transformer=IdentityOperation(),
         input_data=['input_1', 'input_3'],
-        cache_dirpath=CACHE_DIRPATH
+        experiment_directory=CACHE_DIRPATH
     )
     with pytest.raises(StepsError):
         step.fit_transform(data)
