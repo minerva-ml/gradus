@@ -4,13 +4,13 @@ import shutil
 
 from pathlib import Path
 
-CACHE_DIRPATH = '.cache'
+EXP_DIR = '.cache'
 LOGS_PATH = 'steps.log'
 
 
 def remove_cache():
-    if Path(CACHE_DIRPATH).exists():
-        shutil.rmtree(CACHE_DIRPATH)
+    if Path(EXP_DIR).exists():
+        shutil.rmtree(EXP_DIR)
 
 
 def remove_logs():
