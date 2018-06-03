@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from steppy.base import Step, IdentityOperation, StepsError, make_transformer
-from .steppy_test_utils import CACHE_DIRPATH
+from .steppy_test_utils import EXP_DIR
 
 
 @pytest.fixture
@@ -50,7 +50,7 @@ def test_inputs_without_conflicting_names_do_not_require_adapter(data):
         name='test_inputs_without_conflicting_names_do_not_require_adapter_1',
         transformer=IdentityOperation(),
         input_data=['input_1'],
-        experiment_directory=CACHE_DIRPATH
+        experiment_directory=EXP_DIR
     )
     output = step.fit_transform(data)
     assert output == data['input_1']
@@ -59,7 +59,7 @@ def test_inputs_without_conflicting_names_do_not_require_adapter(data):
         name='test_inputs_without_conflicting_names_do_not_require_adapter_2',
         transformer=IdentityOperation(),
         input_data=['input_1', 'input_2'],
-        experiment_directory=CACHE_DIRPATH
+        experiment_directory=EXP_DIR
     )
     output = step.fit_transform(data)
     assert output == {**data['input_1'], **data['input_2']}
@@ -70,7 +70,7 @@ def test_inputs_with_conflicting_names_require_adapter(data):
         name='test_inputs_with_conflicting_names_require_adapter',
         transformer=IdentityOperation(),
         input_data=['input_1', 'input_3'],
-        experiment_directory=CACHE_DIRPATH
+        experiment_directory=EXP_DIR
     )
     with pytest.raises(StepsError):
         step.fit_transform(data)
