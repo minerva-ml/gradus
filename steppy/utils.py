@@ -6,19 +6,20 @@ from IPython.display import Image, display
 
 
 def initialize_logger():
-    """Initialize steppy logger, with name 'steppy'
+    """Initialize steppy logger.
 
     This logger is used throughout the steppy library to report computation progress.
 
     Example:
-        initialize_logger()
-        logger = get_logger()
-        logger.info('My message inside pipeline')
-        result looks like this:
-        `2018-06-02 12:33:48 steppy >>> My message inside pipeline`
+        Simple use of steppy logger::
+            initialize_logger()
+            logger = get_logger()
+            logger.info('My message inside pipeline')
+        result looks like this::
+            '2018-06-02 12:33:48 steppy >>> My message inside pipeline'
 
     Returns:
-        logging.Logger: logger object
+        logging.Logger: logger object formatted in the steppy style
     """
     logger = logging.getLogger('steppy')
     logger.setLevel(logging.INFO)
@@ -37,23 +38,24 @@ def initialize_logger():
 
 
 def get_logger():
-    """Fetch existing steppy logger with name 'steppy'
+    """Fetch existing steppy logger.
 
     Example:
-        initialize_logger()
-        logger = get_logger()
-        logger.info('My message inside pipeline')
-        result looks like this:
-        `2018-06-02 12:33:48 steppy >>> My message inside pipeline`
+        Simple use of steppy logger::
+            initialize_logger()
+            logger = get_logger()
+            logger.info('My message inside pipeline')
+        result looks like this::
+            '2018-06-02 12:33:48 steppy >>> My message inside pipeline'
 
     Returns:
-        logging.Logger: logger object
+        logging.Logger: logger object formatted in the steppy style
     """
     return logging.getLogger('steppy')
 
 
 def display_pipeline(structure_dict):
-    """Displays pipeline structure in the jupyter notebook
+    """Displays pipeline structure in the jupyter notebook.
 
     Args:
         structure_dict (dict): dict returned by step.upstream_pipeline_structure
@@ -63,8 +65,8 @@ def display_pipeline(structure_dict):
     display(plt)
 
 
-def save_as_png(structure_dict, filepath):
-    """Saves pipeline as png
+def persist_as_png(structure_dict, filepath):
+    """Saves pipeline diagram to disk as png file.
 
     Args:
         structure_dict (dict): dict returned by step.upstream_pipeline_structure
@@ -81,11 +83,11 @@ def _create_graph(structure_dict):
         structure_dict (dict): dict returned by step.upstream_pipeline_structure
 
     Returns:
-        obj: pydot.Dot object representing upstream pipeline structure (with regard to the current Step).
+        graph (pydot.Dot): object representing upstream pipeline structure (with regard to the current Step).
     """
-    dot = pydot.Dot()
+    graph = pydot.Dot()
     for node in structure_dict['nodes']:
-        dot.add_node(pydot.Node(node))
+        graph.add_node(pydot.Node(node))
     for node1, node2 in structure_dict['edges']:
-        dot.add_edge(pydot.Edge(node1, node2))
-    return dot
+        graph.add_edge(pydot.Edge(node1, node2))
+    return graph
