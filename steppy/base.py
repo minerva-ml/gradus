@@ -334,60 +334,62 @@ class Step:
         self.exp_dir_outputs_step = os.path.join(self.exp_dir_outputs, '{}'.format(self.name))
         self.exp_dir_cache_step = os.path.join(self.exp_dir_cache, '{}'.format(self.name))
 
+        logger.info('done: initializing experiment directories')
+
     def _cached_fit_transform(self, step_inputs):
         if self.transformer_is_cached and not self.force_fitting:
-            logger.info('step {} loading transformer...'.format(self.name))
+            logger.info('Step {}, loading transformer from the {}'.format(self.name, self.exp_dir_transformers_step))
             self.transformer.load(self.exp_dir_transformers_step)
-            logger.info('step {} transforming...'.format(self.name))
+            logger.info('Step {}, transforming...'.format(self.name))
             step_output_data = self.transformer.transform(**step_inputs)
         else:
-            logger.info('step {} fitting and transforming...'.format(self.name))
+            logger.info('Step {}, fitting and transforming...'.format(self.name))
             step_output_data = self.transformer.fit_transform(**step_inputs)
-            logger.info('step {} saving transformer...'.format(self.name))
-            self.transformer.save(self.exp_dir_transformers_step)
+            logger.info('Step {}, persisting transformer to the {}'.format(self.name, self.exp_dir_transformers_step))
+            self.transformer.persist(self.exp_dir_transformers_step)
 
         if self.cache_output:
-            logger.info('step {} caching outputs...'.format(self.name))
-            self._save_output(step_output_data, self.exp_dir_cache_step)
+            logger.info('Step {}, caching outputs to the {}'.format(self.name, self.exp_dir_cache_step))
+            self._persist_output(step_output_data, self.exp_dir_cache_step)
         if self.persist_output:
-            logger.info('step {} saving outputs...'.format(self.name))
-            self._save_output(step_output_data, self.exp_dir_outputs_step)
+            logger.info('Step {}, persisting outputs to the {}'.format(self.name, self.exp_dir_outputs_step))
+            self._persist_output(step_output_data, self.exp_dir_outputs_step)
         return step_output_data
 
     def _load_output(self, filepath):
-        logger.info('loading output from {}'.format(filepath))
+        logger.info('Step {}, loading output from {}'.format(self.name, filepath))
         return joblib.load(filepath)
 
-    def _save_output(self, output_data, filepath):
-        logger.info('saving output to {}'.format(filepath))
+    def _persist_output(self, output_data, filepath):
+        logger.info('Step {}, persisting output to the {}'.format(self.name, filepath))
         joblib.dump(output_data, filepath)
 
     def _cached_transform(self, step_inputs):
         if self.transformer_is_cached:
-            logger.info('step {} loading transformer...'.format(self.name))
+            logger.info('Step {}, loading transformer from the {}'.format(self.name, self.exp_dir_transformers_step))
             self.transformer.load(self.exp_dir_transformers_step)
-            logger.info('step {} transforming...'.format(self.name))
+            logger.info('Step {}, transforming...'.format(self.name))
             step_output_data = self.transformer.transform(**step_inputs)
         else:
             raise ValueError('No transformer cached {}'.format(self.name))
         if self.cache_output:
-            logger.info('step {} caching outputs...'.format(self.name))
-            self._save_output(step_output_data, self.exp_dir_cache_step)
+            logger.info('Step {}, caching outputs to the {}'.format(self.name, self.exp_dir_cache_step))
+            self._persist_output(step_output_data, self.exp_dir_cache_step)
         if self.persist_output:
-            logger.info('step {} saving outputs...'.format(self.name))
-            self._save_output(step_output_data, self.exp_dir_outputs_step)
+            logger.info('Step {}, persisting outputs to the {}'.format(self.name, self.exp_dir_outputs_step))
+            self._persist_output(step_output_data, self.exp_dir_outputs_step)
         return step_output_data
 
     def _adapt(self, step_inputs):
-        logger.info('step {} adapting inputs...'.format(self.name))
+        logger.info('Step {}, adapting inputs...'.format(self.name))
         try:
             return self.adapter.adapt(step_inputs)
         except AdapterError as e:
-            msg = "Error while adapting step '{}'".format(self.name)
+            msg = "Error while adapting step '{}'. Check Step inputs".format(self.name)
             raise StepsError(msg) from e
 
     def _unpack(self, step_inputs):
-        logger.info('step {} unpacking inputs'.format(self.name))
+        logger.info('Step {}, unpacking inputs...'.format(self.name))
         unpacked_steps = {}
         key_to_step_names = defaultdict(list)
         for step_name, step_dict in step_inputs.items():
@@ -436,7 +438,7 @@ class BaseTransformer:
         1. Every action that can be performed on data (transformation, model training) can be performed in two steps
         fitting (where trainable parameters are estimated) and transforming (where previously estimated parameters are used
         to transform the data into desired state)
-        2. Every transformer knows how it should be saved and loaded (especially useful when working with Keras/Pytorch and Sklearn)
+        2. Every transformer knows how it should be persisted and loaded (especially useful when working with Keras/Pytorch and Sklearn)
         in one pipeline
     """
 
@@ -504,14 +506,14 @@ class BaseTransformer:
         """
         return self
 
-    def save(self, filepath):
+    def persist(self, filepath):
         """Saves the trainable parameters of the transformer
 
         Specific implementation of model parameter persistence should be implemented here.
         In case of transformers that do not learn any parameters one can leave this method as is.
 
         Args:
-            filepath (str): filepath where the transformer parameters should be saved
+            filepath (str): filepath where the transformer parameters should be persisted
         """
         joblib.dump({}, filepath)
 
