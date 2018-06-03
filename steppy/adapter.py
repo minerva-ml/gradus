@@ -24,7 +24,7 @@ class Adapter:
         """Adapter constructor
 
         Note:
-            You have to import the extractor E from this module to construct
+            You have to import the extractor 'E' from this module to construct
             adapters
 
         Args:
