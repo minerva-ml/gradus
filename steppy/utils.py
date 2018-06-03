@@ -70,7 +70,7 @@ def persist_as_png(structure_dict, filepath):
 
     Args:
         structure_dict (dict): dict returned by step.upstream_pipeline_structure
-        filepath (str): filepath to which the png with pipeline visualization should be saved
+        filepath (str): filepath to which the png with pipeline visualization should be persisted
     """
     graph = _create_graph(structure_dict)
     graph.write(filepath, format='png')

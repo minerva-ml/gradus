@@ -7,7 +7,7 @@ from collections import defaultdict
 from sklearn.externals import joblib
 
 from steppy.adapter import Adapter, AdapterError
-from steppy.utils import display_pipeline, save_as_png, get_logger, initialize_logger
+from steppy.utils import display_pipeline, persist_as_png, get_logger, initialize_logger
 
 initialize_logger()
 logger = get_logger()
@@ -16,96 +16,117 @@ logger = get_logger()
 class Step:
     """Building block of steppy pipelines.
 
-    Step is an execution wrapper over the transformer (see BaseTransformer) that enables building complex machine learning pipelines.
-    With Step you can:
-        1. design multiple input/output data flows
-        2. handle persistence/caching of both models (transformers) and intermediate results.
-    Step executes fit_transform on every step recursively starting from the very last step and making its way forward
-    through the input_steps. If step transformer was fitted already then said transformer is loaded in and the transform method
-    is executed.
-    One can easily debug the data flow by plotting the pipeline graph with either step.save_as_png(filepath) method
-    or simply returning it in a jupyter notebook cell.
-    Every part of the pipeline can be easily accessed via step.get_step(name) method which makes it easy to reuse parts of the pipeline
-    across multiple solutions.
+    Step is an execution wrapper over the transformer (see BaseTransformer), which realizes single operation on data. With Step you can:
+        1. design multiple input/output data flows and connections between Steps.
+        2. handle persistence and caching of transformers and intermediate results.
+    Step executes 'fit_transform' method inspired by the sklearn on every step recursively starting from the very last Step and making its way forward through the input_steps.
+    One can easily debug the data flow by plotting the pipeline graph (see: step.persist_as_png(filepath) or return step in a jupyter notebook cell.
     """
     def __init__(self,
                  name,
                  transformer,
-                 experiment_directory=None,
+                 experiment_directory,
                  input_data=None,
                  input_steps=None,
                  adapter=None,
                  cache_output=False,
-                 save_output=False,
-                 load_saved_output=False,
-                 save_upstream_pipeline_structure=False,
-                 force_fitting=False):
+                 persist_output=False,
+                 load_persisted_output=False,
+                 force_fitting=False,
+                 persist_upstream_pipeline_structure=False):
         """
         Args:
-            name (str): Step name. Each step in a pipeline needs to have a unique name.
-                Transformers, and Step outputs will be saved under this name.
-            transformer (obj): Step instance or object that inherits from BaseTransformer.
+            name (str): Step name.
+                Each step in a pipeline must have a unique name. This names is used to persist or cache Transformers and outputs of this Step.
+
+            transformer (obj): object that inherits from BaseTransformer or Step instance.
                 When Step instance is passed, transformer from that Step will be copied and used to perform transformations.
                 It is useful when both train and valid data are passed in one pipeline (common situation in deep learning).
+
             experiment_directory (str): path to the directory where all execution artifacts will be stored.
                 The following sub-directories will be created, if they were not created by other Steps:
                     transformers: transformer objects are persisted in this folder
-                    outputs: step output dictionaries are persisted in this folder (if save_output=True)
-                    tmp: step output dictionaries are persisted in this folder (if cache_output=True).
-                        This folder is temporary and should be cleaned before every run.
-            input_steps (list): list of Step instances default []. Current step will combine outputs from input_steps and input_data
-                and pass to the transformer methods fit_transform and transform.
-            input_data (list): list of str default []. Elements of this list are keys in the data dictionary that is passed
-                to the Step's fit_transform or transform methods. Current step will combine input_data and outputs from input_steps
-                and pass to the transformer methods fit_transform and transform.
-                Example:
-                    data = {'input_1': {'X': X,
-                                        'y': y}
-                                        },
-                            'input_2': {'X': X,
-                                        'y': y}
-                                        }
-                            }
-                    step_1 = Step(...,
-                                  input_data = ['input_1']
-                                  ...
-                                  )
-            adapter (obj): Must be an instance of the steppy.adapter.Adapter class.
+                    outputs:      step output dictionaries are persisted in this folder (if persist_output=True)
+                    cache:        step output dictionaries are persisted in this folder (if cache_output=True).
 
-            cache_output (bool): default False. If true then step output dictionary will be cached to exp_dir/tmp/name after transform method
-                of the step transformer is completed. If the same step is used multiple times in the pipeline only the first time
-                the transform method is executed and later the output dictionary is loaded from the exp_dir/tmp/name directory.
+            input_data (list): Elements of this list are keys in the data dictionary that is passed to the Step's 'fit_transform' and 'transform' methods.
+                list of str, default is empty list.
+                Example:
+                    consider data::
+                        data_train = {'input': {'images': X_train,
+                                                'labels': y_train}
+                                     }
+                    'data_train' is dictionary where:
+                         * key 'input' (any str is allowed)
+                         * value which is dictionary that describes dataset, in this example keys are 'images' and 'labels' and values are actual data of any type.
+                    Step definition::
+                        my_step = Step(name='random_forest',
+                                       transformer=RandomForestTransformer(),
+                                       input_data=['input']
+                                       )
+                    Step.input_data takes the key from 'data_train' (values must match!) and extracts actual data that will be passed to the 'fit_transform' and 'transform' method of the 'self.transformer'.
+
+            input_steps (list): List of input Steps that the current Step uses as its input.
+                list of Step instances, default is empty list.
+                Current Step will combine outputs from 'input_steps' and 'input_data' using 'adapter'. Then pass it to the transformer methods 'fit_transform' and 'transform'.
+                Example:
+                    self.input_steps=[cnn_step, rf_step, ensemble_step, guesses_step]
+                    Each element of the list is Step instance.
+
+            adapter (obj): It renames and arranges inputs that are passed to the Transformer (see: BaseTransformer).
+                default is None.
+                If not None, then must be an instance of the steppy.adapter.Adapter class.
+                Example:
+                    self.adapter=Adapter({'X': E('input', 'images'),
+                                          'y': E('input', 'labels')}
+                                         )
+                Adapter simplifies the renaming and combining of multiple inputs into single one. In this example, after the adaptation:
+                    * 'X' is key to the data stored under the 'images' key
+                    * 'y' is key to the data stored under the 'labels' key
+                    where both 'images' and 'labels' keys comes from 'input' (see: input data).
+
+            cache_output (bool): If True, Step output dictionary will be cached to the experiment_directory/cache/name, when transform method of the Step transformer is completed. If the same Step is used multiple times, transform method is invoked only once. Further invokes sinply loads output from the experiment_directory/cache/name directory.
+                default False: do not cache outputs
                 Warning:
                     One should always run pipeline.clean_cache() before executing pipeline.fit_transform(data) or pipeline.transform(data)
-                    Caution when working with large datasets is advised.
-            save_output (bool): default False. If True then Step output dictionary will be saved to
-                `exp_dir/outputs/name` after transform method
-                of the step transformer is completed. It will save the output after every run of the step.transformer.transform method.
-                It will not be loaded unless specified with load_saved_output. It is especially useful when debugging and working with
-                ensemble models or time consuming feature extraction. One can easily persist already computed pieces of the pipeline
-                and not waste time recalculating them in the future.
-                Warning:
-                    Caution when working with large datasets is advised.
-            load_saved_output (bool): default False. If True then step output dictionary saved to the exp_dir/tmp/name will be loaded when
-                step is called.
-                Warning:
-                    Reruning the same pipeline on new data with load_saved_output may lead to errors when outputs from
-                    old data are loaded while user would expect the pipeline to use new data instead.
-            force_fitting (bool): default False. If True then step transformer will be fitted (via fit_transform) even if
-                exp_dir/transformers/name exists. This is helpful when one wants to use save_output=True and load save_output=True
-                on a previous step and fit current step multiple times. That is a typical usecase when tuning hyperparameters
-                for an ensemble model trained on the outputs from first level models or a model build on features that are
-                time consuming to compute.
-            save_upstream_pipeline_structure (bool): default False.
-                If true then the upstream pipeline structure (with regard to the current Step) will be saved as json
-                in the exp_dir
-        """
-        assert isinstance(name, str), 'name must be str'
-        assert isinstance(experiment_directory, str), 'exp_dir (experiment_directory) must be str'
-        if adapter is not None:
-            assert isinstance(adapter, Adapter), 'adapter must be an instance of {}'.format(str(Adapter))
+                    When working with large datasets, cache might be very large.
 
-        logger.info('initializing step {}'.format(name))
+            persist_output (bool): If True, persist Step output to disk under the experiment_directory/outputs/name directory.
+                default False: do not persist any files to disk.
+                If True then Step output dictionary will be persisted to the 'experiment_directory/outputs/name' directory, after transform method of the Step transformer is completed. Step persist to disk the output after every run of the transformer's transform method. It means that Step overrides files. See also 'load_persisted_output' parameter.
+                    Warning:
+                        When working with large datasets, cache might be very large.
+
+            load_persisted_output (bool): If True, Step output dictionary already persisted to the 'experiment_directory/cache/name' will be loaded when Step is called.
+                default False: do not load persisted output
+                Useful when debugging and working with ensemble models or time consuming feature extraction. One can easily persist already computed pieces of the pipeline and save time by loading them instead of calculating.
+                Warning:
+                    Re-running the same pipeline on new data with 'load_persisted_output' set True, may lead to errors when outputs from old data are loaded while user would expect the pipeline to use new data instead.
+
+            force_fitting (bool): If True, Step transformer will be fitted (via 'fit_transform') even if experiment_directory/transformers/step_name exists.
+                default False: do not force fitting of the transformer.
+                Helpful when one wants to use persist_output=True and load persist_output=True on a previous Step and fit current Step multiple times. This is a typical scenario for tuning hyperparameters for an ensemble model trained on the outputs from first level models or a model build on features that are time consuming to compute.
+
+            persist_upstream_pipeline_structure (bool): If true, the upstream pipeline structure (with regard to the current Step) will be persisted as json file in the experiment_directory.
+                default False: do not persist upstream pipeline structure
+        """
+        assert isinstance(name, str), 'Step name must be str, got {} instead.'.format(type(name))
+        assert isinstance(experiment_directory, str), 'Step {} error, experiment_directory must be str, got {} instead.'.format(name, type(experiment_directory))
+
+        if input_data is not None:
+            assert isinstance(input_data, list), 'Step {} error, input_data must be list, got {} instead.'.format(name, type(input_data))
+        if input_steps is not None:
+            assert isinstance(input_steps, list), 'Step {} error, input_steps must be list, got {} instead.'.format(name, type(input_steps))
+        if adapter is not None:
+            assert isinstance(adapter, Adapter), 'Step {} error, adapter must be an instance of {}'.format(name, str(Adapter))
+
+        assert isinstance(cache_output, bool), 'Step {} error, cache_output must be bool, got {} instead.'.format(name, type(cache_output))
+        assert isinstance(persist_output, bool), 'Step {} error, persist_output must be bool, got {} instead.'.format(name, type(persist_output))
+        assert isinstance(load_persisted_output, bool), 'Step {} error, load_persisted_output must be bool, got {} instead.'.format(name, type(load_persisted_output))
+        assert isinstance(force_fitting, bool), 'Step {} error, force_fitting must be bool, got {} instead.'.format(name, type(force_fitting))
+        assert isinstance(persist_upstream_pipeline_structure, bool), 'Step {} error, persist_upstream_pipeline_structure must be bool, got {} instead.'.format(name, type(persist_upstream_pipeline_structure))
+
+        logger.info('initializing Step {}...'.format(name))
 
         self.exp_dir = os.path.join(experiment_directory)
         self._prepare_experiment_directories()
@@ -118,14 +139,16 @@ class Step:
         self.adapter = adapter
 
         self.cache_output = cache_output
-        self.save_output = save_output
-        self.load_saved_output = load_saved_output
+        self.persist_output = persist_output
+        self.load_persisted_output = load_persisted_output
         self.force_fitting = force_fitting
 
-        if save_upstream_pipeline_structure:
-            save_dir = os.path.join(self.exp_dir, '{}_upstream_structure.json'.format(self.name))
-            logger.info('saving upstream pipeline structure to {}'.format(save_dir))
-            joblib.dump(self.upstream_pipeline_structure, save_dir)
+        if persist_upstream_pipeline_structure:
+            persist_dir = os.path.join(self.exp_dir, '{}_upstream_structure.json'.format(self.name))
+            logger.info('saving upstream pipeline structure to {}'.format(persist_dir))
+            joblib.dump(self.upstream_pipeline_structure, persist_dir)
+
+        logger.info('Step {} initialized'.format(name))
 
     @property
     def upstream_pipeline_structure(self):
@@ -154,7 +177,7 @@ class Step:
 
     @property
     def transformer_is_cached(self):
-        """(bool): True if transformer exists under the directory self.exp_dir_transformers_step
+        """(bool): True if transformer exists under the directory experiment_directory/transformers/step_name
         """
         if isinstance(self.transformer, Step):
             self._copy_transformer(self.transformer, self.name, self.exp_dir)
@@ -162,41 +185,39 @@ class Step:
 
     @property
     def output_is_cached(self):
-        """(bool): True if step outputs exists under the exp_dir/tmp/name.
+        """(bool): True if step outputs exists under the experiment_directory/cache/name.
             See cache_output.
         """
-        return os.path.exists(self.exp_dir_tmp_step)
+        return os.path.exists(self.exp_dir_cache_step)
 
     @property
-    def output_is_saved(self):
-        """(bool): True if step outputs exists under the exp_dir/outputs/name.
-            See save_output.
+    def output_is_persisted(self):
+        """(bool): True if step outputs exists under the experiment_directory/outputs/name.
+            See persist_output.
         """
         return os.path.exists(self.exp_dir_outputs_step)
 
     def fit_transform(self, data):
-        """fits the model and transforms data or loads already processed data
+        """Fit the model and transform data or loads already processed data.
 
-        Loads cached/saved outputs or adapts data for the current transformer and executes transformer.fit_transform
+        Loads cached or persisted outputs or adapts data for the current transformer and executes transformer.fit_transform
 
         Args:
             data (dict): data dictionary with keys as input names and values as dictionaries of key:value pairs that can
-                be passed to the step.transformer.fit_transform method
+                be passed to the self.transformer.fit_transform method
                 Example:
-                    data = {'input_1':{'X':X,
-                                       'y':y
-                                       },
-                            'input_2': {'X':X,
-                                       'y':y
-                                       }
-                           }
+                    data = {'input_1': {'X': X,
+                                        'y': y},
+                            'input_2': {'X': X,
+                                        'y': y}
+                            }
         Returns:
-            dict: step outputs from the transformer.fit_transform method
+            dict: Step outputs from the self.transformer.fit_transform method
         """
         if self.output_is_cached and not self.force_fitting:
             logger.info('step {} loading output...'.format(self.name))
-            step_output_data = self._load_output(self.exp_dir_tmp_step)
-        elif self.output_is_saved and self.load_saved_output and not self.force_fitting:
+            step_output_data = self._load_output(self.exp_dir_cache_step)
+        elif self.output_is_persisted and self.load_persisted_output and not self.force_fitting:
             logger.info('step {} loading output...'.format(self.name))
             step_output_data = self._load_output(self.exp_dir_outputs_step)
         else:
@@ -218,7 +239,7 @@ class Step:
     def transform(self, data):
         """transforms data or loads already processed data
 
-        Loads cached/saved outputs or adapts data for the current transformer and executes transformer.transform
+        Loads cached persisted outputs or adapts data for the current transformer and executes transformer.transform
 
         Args:
             data (dict): data dictionary with keys as input names and values as dictionaries of key:value pairs that can
@@ -236,8 +257,8 @@ class Step:
         """
         if self.output_is_cached:
             logger.info('step {} loading cached output...'.format(self.name))
-            step_output_data = self._load_output(self.exp_dir_tmp_step)
-        elif self.output_is_saved and self.load_saved_output:
+            step_output_data = self._load_output(self.exp_dir_cache_step)
+        elif self.output_is_persisted and self.load_persisted_output:
             logger.info('step {} loading output...'.format(self.name))
             step_output_data = self._load_output(self.exp_dir_outputs_step)
         else:
@@ -257,10 +278,10 @@ class Step:
         return step_output_data
 
     def clean_cache(self):
-        """Removes everything from the directory 'self.exp_dir_tmp'
+        """Removes everything from the directory 'experiment_directory/cache'
         """
         logger.info('cleaning cache...')
-        paths = glob.glob(os.path.join(self.exp_dir_tmp, '*'))
+        paths = glob.glob(os.path.join(self.exp_dir_cache, '*'))
         for path in paths:
             logger.info('removing {}'.format(path))
             os.remove(path)
@@ -279,18 +300,17 @@ class Step:
         """
         return self.all_steps[name]
 
-    def save_pipeline_as_png(self, filepath):
-        """Creates pipeline graph and saves it as png
+    def persist_pipeline_diagram(self, filepath):
+        """Creates pipeline diagram and persists it to disk as png file.
 
-        Pydot graph is created and saved to filepath as png image. This feature is useful for debugging purposes
-        especially when working with complex pipelines.
+        Pydot graph is created and persisted to disk as png file under the filepath directory.
 
         Args:
-            filepath (str): filepath to which the png with pipeline visualization should be saved
+            filepath (str): filepath to which the png with pipeline visualization should be persisted
         """
         assert isinstance(filepath, str), 'Step {} error, filepath must be str. Got {} instead'.format(self.name,
                                                                                                        type(filepath))
-        save_as_png(self.upstream_pipeline_structure, filepath)
+        persist_as_png(self.upstream_pipeline_structure, filepath)
 
     def _copy_transformer(self, step, name, dirpath):
         self.transformer = self.transformer.transformer
@@ -303,16 +323,16 @@ class Step:
     def _prepare_experiment_directories(self):
         logger.info('initializing experiment directories under {}'.format(self.exp_dir))
 
-        for dir_name in ['transformers', 'outputs', 'tmp']:
+        for dir_name in ['transformers', 'outputs', 'cache']:
             os.makedirs(os.path.join(self.exp_dir, dir_name), exist_ok=True)
 
         self.exp_dir_transformers = os.path.join(self.exp_dir, 'transformers')
         self.exp_dir_outputs = os.path.join(self.exp_dir, 'outputs')
-        self.exp_dir_tmp = os.path.join(self.exp_dir, 'tmp')
+        self.exp_dir_cache = os.path.join(self.exp_dir, 'cache')
 
         self.exp_dir_transformers_step = os.path.join(self.exp_dir_transformers, self.name)
         self.exp_dir_outputs_step = os.path.join(self.exp_dir_outputs, '{}'.format(self.name))
-        self.exp_dir_tmp_step = os.path.join(self.exp_dir_tmp, '{}'.format(self.name))
+        self.exp_dir_cache_step = os.path.join(self.exp_dir_cache, '{}'.format(self.name))
 
     def _cached_fit_transform(self, step_inputs):
         if self.transformer_is_cached and not self.force_fitting:
@@ -328,8 +348,8 @@ class Step:
 
         if self.cache_output:
             logger.info('step {} caching outputs...'.format(self.name))
-            self._save_output(step_output_data, self.exp_dir_tmp_step)
-        if self.save_output:
+            self._save_output(step_output_data, self.exp_dir_cache_step)
+        if self.persist_output:
             logger.info('step {} saving outputs...'.format(self.name))
             self._save_output(step_output_data, self.exp_dir_outputs_step)
         return step_output_data
@@ -352,8 +372,8 @@ class Step:
             raise ValueError('No transformer cached {}'.format(self.name))
         if self.cache_output:
             logger.info('step {} caching outputs...'.format(self.name))
-            self._save_output(step_output_data, self.exp_dir_tmp_step)
-        if self.save_output:
+            self._save_output(step_output_data, self.exp_dir_cache_step)
+        if self.persist_output:
             logger.info('step {} saving outputs...'.format(self.name))
             self._save_output(step_output_data, self.exp_dir_outputs_step)
         return step_output_data
