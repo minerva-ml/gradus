@@ -128,9 +128,6 @@ class Step:
 
         logger.info('initializing Step {}...'.format(name))
 
-        self.exp_dir = os.path.join(experiment_directory)
-        self._prepare_experiment_directories()
-
         self.name = name
         self.transformer = transformer
 
@@ -142,6 +139,9 @@ class Step:
         self.persist_output = persist_output
         self.load_persisted_output = load_persisted_output
         self.force_fitting = force_fitting
+
+        self.exp_dir = os.path.join(experiment_directory)
+        self._prepare_experiment_directories()
 
         if persist_upstream_pipeline_structure:
             persist_dir = os.path.join(self.exp_dir, '{}_upstream_structure.json'.format(self.name))
