@@ -19,6 +19,7 @@ class Step:
     Step is an execution wrapper over the transformer (see BaseTransformer), which realizes single operation on data. With Step you can:
         1. design multiple input/output data flows and connections between Steps.
         2. handle persistence and caching of transformers and intermediate results.
+        
     Step executes 'fit_transform' method inspired by the sklearn on every step recursively starting from the very last Step and making its way forward through the input_steps.
     One can easily debug the data flow by plotting the pipeline graph (see: step.persist_as_png(filepath) or return step in a jupyter notebook cell.
     """
@@ -156,8 +157,9 @@ class Step:
 
         Returns:
             dict: dictionary describing the upstream pipeline structure. It has two keys: 'edges' and 'nodes', where:
-                value of 'edges' is set of tuples (input_step.name, self.name)
-                value of 'nodes' is set of all step names upstream to this Step
+            
+                - value of 'edges' is set of tuples (input_step.name, self.name)
+                - value of 'nodes' is set of all step names upstream to this Step
         """
         structure_dict = {'edges': set(),
                           'nodes': set()}
@@ -206,6 +208,9 @@ class Step:
             data (dict): data dictionary with keys as input names and values as dictionaries of key:value pairs that can
                 be passed to the self.transformer.fit_transform method
                 Example:
+                
+                .. code-block:: python
+                
                     data = {'input_1': {'X': X,
                                         'y': y},
                             'input_2': {'X': X,
@@ -245,11 +250,14 @@ class Step:
             data (dict): data dictionary with keys as input names and values as dictionaries of key:value pairs that can
                 be passed to the step.transformer.fit_transform method
                 Example:
+                
+                .. code-block:: python
+                
                     data = {'input_1':{'X':X,
                                        'y':y
                                        },
                             'input_2': {'X':X,
-                                       'y':y
+                                        'y':y
                                        }
                            }
         Returns:
@@ -433,13 +441,16 @@ class Step:
 class BaseTransformer:
     """Abstraction on two level fit and transform execution.
 
-    Base transformer is an abstraction strongly inspired by the sklearn.Transformer sklearn.Estimator.
-    Two main concepts are:
-        1. Every action that can be performed on data (transformation, model training) can be performed in two steps
-        fitting (where trainable parameters are estimated) and transforming (where previously estimated parameters are used
-        to transform the data into desired state)
-        2. Every transformer knows how it should be persisted and loaded (especially useful when working with Keras/Pytorch and Sklearn)
-        in one pipeline
+    Base transformer is an abstraction strongly inspired by the ``sklearn.Transformer`` and
+    ``sklearn.Estimator``. Two main concepts are:
+    
+        1. Every action that can be performed on data (transformation, model training) can be
+        performed in two steps fitting (where trainable parameters are estimated) and transforming
+        (where previously estimated parameters are used to transform the data into desired state)   
+        
+        2. Every transformer knows how it should be persisted and loaded (especially useful when
+        working with Keras/Pytorch and Sklearn) in one pipeline
+
     """
 
     def __init__(self):

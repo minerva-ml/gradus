@@ -11,12 +11,20 @@ def initialize_logger():
     This logger is used throughout the steppy library to report computation progress.
 
     Example:
-        Simple use of steppy logger::
+    
+        Simple use of steppy logger:
+
+        .. code-block:: python
+        
             initialize_logger()
             logger = get_logger()
             logger.info('My message inside pipeline')
-        result looks like this::
-            '2018-06-02 12:33:48 steppy >>> My message inside pipeline'
+            
+        result looks like this:
+        
+        .. code::
+        
+            2018-06-02 12:33:48 steppy >>> My message inside pipeline
 
     Returns:
         logging.Logger: logger object formatted in the steppy style
@@ -41,12 +49,18 @@ def get_logger():
     """Fetch existing steppy logger.
 
     Example:
-        Simple use of steppy logger::
+    
+        .. code-block:: python
+        
             initialize_logger()
             logger = get_logger()
             logger.info('My message inside pipeline')
-        result looks like this::
-            '2018-06-02 12:33:48 steppy >>> My message inside pipeline'
+            
+        result looks like this:
+        
+        .. code::
+        
+            2018-06-02 12:33:48 steppy >>> My message inside pipeline
 
     Returns:
         logging.Logger: logger object formatted in the steppy style
