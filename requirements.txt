@@ -5,3 +5,5 @@ pytest==3.6.0
 scikit_learn==0.19.1
 setuptools==39.2.0
 typing==3.6.4
+scipy==1.1.0
+
