@@ -25,48 +25,48 @@ class Adapter:
         however names passed to the Step are different. We use `Adapter` to map recieved names
         to the expected names.
 
-        ```
-        from sklearn.datasets import load_iris
-        from sklearn.ensemble import RandomForestClassifier
-        from sklearn.metrics import log_loss
-        from steppy.base import BaseTransformer, Step
-        from steppy.adapter import Adapter, E
+        .. code-block:: python
 
-        iris = load_iris()
+            from sklearn.datasets import load_iris
+            from sklearn.ensemble import RandomForestClassifier
+            from sklearn.metrics import log_loss
+            from steppy.base import BaseTransformer, Step
+            from steppy.adapter import Adapter, E
 
-        pipeline_input = {
-            'train_data': {
-                'target': iris.target,
-                'data': iris.data
+            iris = load_iris()
+
+            pipeline_input = {
+                'train_data': {
+                    'target': iris.target,
+                    'data': iris.data
+                }
             }
-        }
 
-        class RandomForestTransformer(BaseTransformer):
-            def __init__(self, random_state=None):
-                self.estimator = RandomForestClassifier(random_state=random_state)
+            class RandomForestTransformer(BaseTransformer):
+                def __init__(self, random_state=None):
+                    self.estimator = RandomForestClassifier(random_state=random_state)
 
-            def fit(self, X, y):
-                self.estimator.fit(X, y)
-                return self
+                def fit(self, X, y):
+                    self.estimator.fit(X, y)
+                    return self
 
-            def transform(self, X, **kwargs):
-                y_proba  = self.estimator.predict_proba(X)
-                return {'y_proba': y_proba}
+                def transform(self, X, **kwargs):
+                    y_proba  = self.estimator.predict_proba(X)
+                    return {'y_proba': y_proba}
 
-        random_forest = Step(
-            name="random_forest",
-            transformer=RandomForestTransformer(),
-            input_data=['train_data'],
-            adapter=Adapter({
-                'X': E('train_data', 'data'),
-                'y': E('train_data', 'target')
-            }),
-            experiment_directory='./working_dir'
-        )
+            random_forest = Step(
+                name="random_forest",
+                transformer=RandomForestTransformer(),
+                input_data=['train_data'],
+                adapter=Adapter({
+                    'X': E('train_data', 'data'),
+                    'y': E('train_data', 'target')
+                }),
+                experiment_directory='./working_dir'
+            )
 
-        result = random_forest.fit_transform(pipeline_input)
-        print(log_loss(y_true=iris.target, y_pred=result['y_proba']))
-        ```
+            result = random_forest.fit_transform(pipeline_input)
+            print(log_loss(y_true=iris.target, y_pred=result['y_proba']))
     """
 
     def __init__(self, adapting_recipes: Dict[str, AdaptingRecipe]):
