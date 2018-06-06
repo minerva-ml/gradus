@@ -14,14 +14,89 @@ logger = get_logger()
 
 
 class Step:
-    """Building block of steppy pipelines.
+    """Step is a building block of steppy pipelines.
 
-    Step is an execution wrapper over the transformer (see BaseTransformer), which realizes single operation on data. With Step you can:
+    It is an execution wrapper over the transformer (see BaseTransformer), which realizes single operation on data. With Step you can:
         1. design multiple input/output data flows and connections between Steps.
         2. handle persistence and caching of transformers and intermediate results.
         
-    Step executes 'fit_transform' method inspired by the sklearn on every step recursively starting from the very last Step and making its way forward through the input_steps.
+    Step executes `fit_transform` method inspired by the sklearn on every step recursively starting from the very last Step and making its way forward through the input_steps.
     One can easily debug the data flow by plotting the pipeline graph (see: step.persist_as_png(filepath) or return step in a jupyter notebook cell.
+
+    # Arguments
+        name (str): Step name.
+            Each step in a pipeline must have a unique name. This names is used to persist or cache Transformers and outputs of this Step.
+
+        transformer (obj): object that inherits from BaseTransformer or Step instance.
+            When Step instance is passed, transformer from that Step will be copied and used to perform transformations.
+            It is useful when both train and valid data are passed in one pipeline (common situation in deep learning).
+
+        experiment_directory (str): path to the directory where all execution artifacts will be stored.
+            The following sub-directories will be created, if they were not created by other Steps:
+                transformers: transformer objects are persisted in this folder
+                outputs:      step output dictionaries are persisted in this folder (if persist_output=True)
+                cache:        step output dictionaries are persisted in this folder (if cache_output=True).
+
+        input_data (list): Elements of this list are keys in the data dictionary that is passed to the Step's 'fit_transform' and 'transform' methods.
+            list of str, default is empty list.
+            Example:
+                consider data::
+                    data_train = {'input': {'images': X_train,
+                                            'labels': y_train}
+                                 }
+                'data_train' is dictionary where:
+                     * key 'input' (any str is allowed)
+                     * value which is dictionary that describes dataset, in this example keys are 'images' and 'labels' and values are actual data of any type.
+                Step definition::
+                    my_step = Step(name='random_forest',
+                                   transformer=RandomForestTransformer(),
+                                   input_data=['input']
+                                   )
+                Step.input_data takes the key from 'data_train' (values must match!) and extracts actual data that will be passed to the 'fit_transform' and 'transform' method of the 'self.transformer'.
+
+        input_steps (list): List of input Steps that the current Step uses as its input.
+            list of Step instances, default is empty list.
+            Current Step will combine outputs from 'input_steps' and 'input_data' using 'adapter'. Then pass it to the transformer methods 'fit_transform' and 'transform'.
+            Example:
+                self.input_steps=[cnn_step, rf_step, ensemble_step, guesses_step]
+                Each element of the list is Step instance.
+
+        adapter (obj): It renames and arranges inputs that are passed to the Transformer (see: BaseTransformer).
+            default is None.
+            If not None, then must be an instance of the steppy.adapter.Adapter class.
+            Example:
+                self.adapter=Adapter({'X': E('input', 'images'),
+                                      'y': E('input', 'labels')}
+                                     )
+            Adapter simplifies the renaming and combining of multiple inputs into single one. In this example, after the adaptation:
+                * 'X' is key to the data stored under the 'images' key
+                * 'y' is key to the data stored under the 'labels' key
+                where both 'images' and 'labels' keys comes from 'input' (see: input data).
+
+        cache_output (bool): If True, Step output dictionary will be cached to the experiment_directory/cache/name, when transform method of the Step transformer is completed. If the same Step is used multiple times, transform method is invoked only once. Further invokes sinply loads output from the experiment_directory/cache/name directory.
+            default False: do not cache outputs
+            Warning:
+                One should always run pipeline.clean_cache() before executing pipeline.fit_transform(data) or pipeline.transform(data)
+                When working with large datasets, cache might be very large.
+
+        persist_output (bool): If True, persist Step output to disk under the experiment_directory/outputs/name directory.
+            default False: do not persist any files to disk.
+            If True then Step output dictionary will be persisted to the 'experiment_directory/outputs/name' directory, after transform method of the Step transformer is completed. Step persist to disk the output after every run of the transformer's transform method. It means that Step overrides files. See also 'load_persisted_output' parameter.
+                Warning:
+                    When working with large datasets, cache might be very large.
+
+        load_persisted_output (bool): If True, Step output dictionary already persisted to the 'experiment_directory/cache/name' will be loaded when Step is called.
+            default False: do not load persisted output
+            Useful when debugging and working with ensemble models or time consuming feature extraction. One can easily persist already computed pieces of the pipeline and save time by loading them instead of calculating.
+            Warning:
+                Re-running the same pipeline on new data with 'load_persisted_output' set True, may lead to errors when outputs from old data are loaded while user would expect the pipeline to use new data instead.
+
+        force_fitting (bool): If True, Step transformer will be fitted (via 'fit_transform') even if experiment_directory/transformers/step_name exists.
+            default False: do not force fitting of the transformer.
+            Helpful when one wants to use persist_output=True and load persist_output=True on a previous Step and fit current Step multiple times. This is a typical scenario for tuning hyperparameters for an ensemble model trained on the outputs from first level models or a model build on features that are time consuming to compute.
+
+        persist_upstream_pipeline_structure (bool): If true, the upstream pipeline structure (with regard to the current Step) will be persisted as json file in the experiment_directory.
+            default False: do not persist upstream pipeline structure
     """
     def __init__(self,
                  name,
@@ -35,82 +110,7 @@ class Step:
                  load_persisted_output=False,
                  force_fitting=False,
                  persist_upstream_pipeline_structure=False):
-        """
-        Args:
-            name (str): Step name.
-                Each step in a pipeline must have a unique name. This names is used to persist or cache Transformers and outputs of this Step.
 
-            transformer (obj): object that inherits from BaseTransformer or Step instance.
-                When Step instance is passed, transformer from that Step will be copied and used to perform transformations.
-                It is useful when both train and valid data are passed in one pipeline (common situation in deep learning).
-
-            experiment_directory (str): path to the directory where all execution artifacts will be stored.
-                The following sub-directories will be created, if they were not created by other Steps:
-                    transformers: transformer objects are persisted in this folder
-                    outputs:      step output dictionaries are persisted in this folder (if persist_output=True)
-                    cache:        step output dictionaries are persisted in this folder (if cache_output=True).
-
-            input_data (list): Elements of this list are keys in the data dictionary that is passed to the Step's 'fit_transform' and 'transform' methods.
-                list of str, default is empty list.
-                Example:
-                    consider data::
-                        data_train = {'input': {'images': X_train,
-                                                'labels': y_train}
-                                     }
-                    'data_train' is dictionary where:
-                         * key 'input' (any str is allowed)
-                         * value which is dictionary that describes dataset, in this example keys are 'images' and 'labels' and values are actual data of any type.
-                    Step definition::
-                        my_step = Step(name='random_forest',
-                                       transformer=RandomForestTransformer(),
-                                       input_data=['input']
-                                       )
-                    Step.input_data takes the key from 'data_train' (values must match!) and extracts actual data that will be passed to the 'fit_transform' and 'transform' method of the 'self.transformer'.
-
-            input_steps (list): List of input Steps that the current Step uses as its input.
-                list of Step instances, default is empty list.
-                Current Step will combine outputs from 'input_steps' and 'input_data' using 'adapter'. Then pass it to the transformer methods 'fit_transform' and 'transform'.
-                Example:
-                    self.input_steps=[cnn_step, rf_step, ensemble_step, guesses_step]
-                    Each element of the list is Step instance.
-
-            adapter (obj): It renames and arranges inputs that are passed to the Transformer (see: BaseTransformer).
-                default is None.
-                If not None, then must be an instance of the steppy.adapter.Adapter class.
-                Example:
-                    self.adapter=Adapter({'X': E('input', 'images'),
-                                          'y': E('input', 'labels')}
-                                         )
-                Adapter simplifies the renaming and combining of multiple inputs into single one. In this example, after the adaptation:
-                    * 'X' is key to the data stored under the 'images' key
-                    * 'y' is key to the data stored under the 'labels' key
-                    where both 'images' and 'labels' keys comes from 'input' (see: input data).
-
-            cache_output (bool): If True, Step output dictionary will be cached to the experiment_directory/cache/name, when transform method of the Step transformer is completed. If the same Step is used multiple times, transform method is invoked only once. Further invokes sinply loads output from the experiment_directory/cache/name directory.
-                default False: do not cache outputs
-                Warning:
-                    One should always run pipeline.clean_cache() before executing pipeline.fit_transform(data) or pipeline.transform(data)
-                    When working with large datasets, cache might be very large.
-
-            persist_output (bool): If True, persist Step output to disk under the experiment_directory/outputs/name directory.
-                default False: do not persist any files to disk.
-                If True then Step output dictionary will be persisted to the 'experiment_directory/outputs/name' directory, after transform method of the Step transformer is completed. Step persist to disk the output after every run of the transformer's transform method. It means that Step overrides files. See also 'load_persisted_output' parameter.
-                    Warning:
-                        When working with large datasets, cache might be very large.
-
-            load_persisted_output (bool): If True, Step output dictionary already persisted to the 'experiment_directory/cache/name' will be loaded when Step is called.
-                default False: do not load persisted output
-                Useful when debugging and working with ensemble models or time consuming feature extraction. One can easily persist already computed pieces of the pipeline and save time by loading them instead of calculating.
-                Warning:
-                    Re-running the same pipeline on new data with 'load_persisted_output' set True, may lead to errors when outputs from old data are loaded while user would expect the pipeline to use new data instead.
-
-            force_fitting (bool): If True, Step transformer will be fitted (via 'fit_transform') even if experiment_directory/transformers/step_name exists.
-                default False: do not force fitting of the transformer.
-                Helpful when one wants to use persist_output=True and load persist_output=True on a previous Step and fit current Step multiple times. This is a typical scenario for tuning hyperparameters for an ensemble model trained on the outputs from first level models or a model build on features that are time consuming to compute.
-
-            persist_upstream_pipeline_structure (bool): If true, the upstream pipeline structure (with regard to the current Step) will be persisted as json file in the experiment_directory.
-                default False: do not persist upstream pipeline structure
-        """
         assert isinstance(name, str), 'Step name must be str, got {} instead.'.format(type(name))
         assert isinstance(experiment_directory, str), 'Step {} error, experiment_directory must be str, got {} instead.'.format(name, type(experiment_directory))
 
