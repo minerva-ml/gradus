@@ -14,15 +14,15 @@ class AdapterError(Exception):
 
 
 class Adapter:
-    """Translates outputs from parent steps to inputs to the current step
+    """Translates outputs from parent steps to inputs to the current step.
 
     Attributes:
-        adapting_recipes: The recipes that the adapter was initialized with
+        adapting_recipes: The recipes that the adapter was initialized with.
 
     Example:
-        Normally Adapter will be used with a Step. In the following example
+        Normally Adapter is used with a Step. In the following example
         `RandomForestTransformer` follows sklearn convention of calling arguments `X` and `y`,
-        however names passed to the Step are different. We use `Adapter` to map recieved names
+        however names passed to the Step are different. We use Adapter to map recieved names
         to the expected names.
 
         .. code-block:: python
@@ -70,11 +70,11 @@ class Adapter:
     """
 
     def __init__(self, adapting_recipes: Dict[str, AdaptingRecipe]):
-        """Adapter constructor
+        """Adapter constructor.
 
         Note:
             You have to import the extractor 'E' from this module to construct
-            adapters
+            adapters.
 
         Args:
             adapting_recipes: Recipes used to control the input translation.
@@ -103,17 +103,17 @@ class Adapter:
         """
         self.adapting_recipes = adapting_recipes
 
-    def adapt(self, all_ouputs: AllOutputs) -> Dict[str, Any]:
-        """Adapt inputs for the transformer included in the step
+    def adapt(self, all_ouputs: AllOutputs) -> DataPacket:
+        """Adapt inputs for the transformer included in the step.
 
         Args:
             all_ouputs: Dict of outputs from parent steps. The keys should
-            match the names of these steps and the values should be their
-            respective outputs.
+                match the names of these steps and the values should be their
+                respective outputs.
 
         Returns:
-            adapted: Dict with the same keys as `adapting_recipes` and values
-            constructed according to the respective recipes
+            Dictionary with the same keys as `adapting_recipes` and values
+            constructed according to the respective recipes.
 
         """
         adapted = {}

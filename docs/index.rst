@@ -13,7 +13,7 @@ Steppy is a lightweight, open-source, Python library for fast and reproducible e
    :caption: Module contents:
       
 
-Indices and tables
+API documentation
 ==================
 
 * :ref:`genindex`

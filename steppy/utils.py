@@ -72,7 +72,8 @@ def display_pipeline(structure_dict):
     """Displays pipeline structure in the jupyter notebook.
 
     Args:
-        structure_dict (dict): dict returned by step.upstream_pipeline_structure
+        structure_dict (dict): dict returned by
+            :func:`~steppy.base.Step.upstream_pipeline_structure`.
     """
     graph = _create_graph(structure_dict)
     plt = Image(graph.create_png())
@@ -83,7 +84,8 @@ def persist_as_png(structure_dict, filepath):
     """Saves pipeline diagram to disk as png file.
 
     Args:
-        structure_dict (dict): dict returned by step.upstream_pipeline_structure
+        structure_dict (dict): dict returned by
+            :func:`~steppy.base.Step.upstream_pipeline_structure`
         filepath (str): filepath to which the png with pipeline visualization should be persisted
     """
     graph = _create_graph(structure_dict)
