@@ -1,7 +1,7 @@
 # Steppy
 
 ### What is Steppy?
-Steppy is a lightweight, open-source, Python 3 library for fast and reproducible experimentation. It lets data scientist focus on data science, not on software development issues. Minimal interface does not impose constraints, however, enables clean pipeline design and reproducible work.
+Steppy is a lightweight, open-source, Python 3 library for fast and reproducible experimentation. It lets data scientist focus on data science, not on software development issues. Minimal interface does not impose constraints, however, enables clean machine learning pipeline design.
 
 ### What problem steppy solves?
 In the course of the project, data scientist faces multiple problems. Difficulties with reproducibility and lack of the ability to prepare experiments quickly are two particular examples. Steppy address both problems by introducing two simple abstractions: `Step` and `Tranformer`. We consider it minimal interface for building machine learning pipelines.
