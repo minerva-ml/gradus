@@ -2,10 +2,10 @@ from setuptools import setup
 
 setup(name='steppy',
       packages=['steppy'],
-      version='0.1.3',
+      version='0.1.4',
       description='A lightweight, open-source, Python library for fast and reproducible experimentation',
       url='https://github.com/minerva-ml/steppy',
-      download_url='https://github.com/minerva-ml/steppy/archive/0.1.3.tar.gz',
+      download_url='https://github.com/minerva-ml/steppy/archive/0.1.4.tar.gz',
       author='Kamil A. Kaczmarek',
       author_email='kamil.kaczmarek@neptune.ml',
       keywords=['machine-learning', 'reproducibility', 'pipeline', 'data-science'],
