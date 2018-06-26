@@ -218,7 +218,7 @@ class Step:
 
         if persist_upstream_pipeline_structure:
             persist_dir = os.path.join(self.exp_dir, '{}_upstream_structure.json'.format(self.name))
-            logger.info('saving upstream pipeline structure to {}'.format(persist_dir))
+            logger.info('Saving upstream pipeline structure to {}'.format(persist_dir))
             joblib.dump(self.upstream_pipeline_structure, persist_dir)
 
         logger.info('Step {} initialized'.format(name))
@@ -298,10 +298,10 @@ class Step:
             dict: Step outputs from the ``self.transformer.fit_transform`` method
         """
         if self.output_is_cached and not self.force_fitting:
-            logger.info('step {} loading output...'.format(self.name))
+            logger.info('Step {} loading cached output...'.format(self.name))
             step_output_data = self._load_output(self.exp_dir_cache_step)
         elif self.output_is_persisted and self.load_persisted_output and not self.force_fitting:
-            logger.info('step {} loading output...'.format(self.name))
+            logger.info('Step {} loading persisted output...'.format(self.name))
             step_output_data = self._load_output(self.exp_dir_outputs_step)
         else:
             step_inputs = {}
@@ -345,10 +345,10 @@ class Step:
             dict: step outputs from the transformer.transform method
         """
         if self.output_is_cached:
-            logger.info('step {} loading cached output...'.format(self.name))
+            logger.info('Step {} loading cached output...'.format(self.name))
             step_output_data = self._load_output(self.exp_dir_cache_step)
         elif self.output_is_persisted and self.load_persisted_output:
-            logger.info('step {} loading output...'.format(self.name))
+            logger.info('Step {} loading persisted output...'.format(self.name))
             step_output_data = self._load_output(self.exp_dir_outputs_step)
         else:
             step_inputs = {}
@@ -441,21 +441,20 @@ class Step:
             self.transformer.persist(self.exp_dir_transformers_step)
 
         if self.cache_output:
-            logger.info('Step {}, caching outputs to the {}'
+            logger.info('Step {}, caching output to the {}'
                         .format(self.name, self.exp_dir_cache_step))
             self._persist_output(step_output_data, self.exp_dir_cache_step)
         if self.persist_output:
-            logger.info('Step {}, persisting outputs to the {}'
+            logger.info('Step {}, persisting output to the {}'
                         .format(self.name, self.exp_dir_outputs_step))
             self._persist_output(step_output_data, self.exp_dir_outputs_step)
         return step_output_data
 
     def _load_output(self, filepath):
-        logger.info('Step {}, loading output from {}'.format(self.name, filepath))
+        logger.info('Step {}, loading from {}'.format(self.name, filepath))
         return joblib.load(filepath)
 
     def _persist_output(self, output_data, filepath):
-        logger.info('Step {}, persisting output to the {}'.format(self.name, filepath))
         joblib.dump(output_data, filepath)
 
     def _cached_transform(self, step_inputs):
@@ -468,11 +467,11 @@ class Step:
         else:
             raise ValueError('No transformer cached {}'.format(self.name))
         if self.cache_output:
-            logger.info('Step {}, caching outputs to the {}'
+            logger.info('Step {}, caching output to the {}'
                         .format(self.name, self.exp_dir_cache_step))
             self._persist_output(step_output_data, self.exp_dir_cache_step)
         if self.persist_output:
-            logger.info('Step {}, persisting outputs to the {}'
+            logger.info('Step {}, persisting output to the {}'
                         .format(self.name, self.exp_dir_outputs_step))
             self._persist_output(step_output_data, self.exp_dir_outputs_step)
         return step_output_data
