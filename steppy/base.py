@@ -297,9 +297,20 @@ class Step:
         Returns:
             dict: Step outputs from the ``self.transformer.fit_transform`` method
         """
-        if self.output_is_cached and not self.force_fitting:
-            logger.info('Step {} loading cached output...'.format(self.name))
-            step_output_data = self._load_output(self.exp_dir_cache_step)
+        exp_dir_cache_step = self.exp_dir_cache_step
+        if 'id' in data:
+            exp_dir_cache_step = '{}__{}'.format(
+                exp_dir_cache_step, data['id'])
+
+        if os.path.exists(exp_dir_cache_step) and not self.force_fitting:
+            if 'id' in data:
+                logger.info(
+                    'Step {} loading cached output with '
+                    'id {}...'.format(self.name, data['id']))
+            else:
+                logger.info(
+                    'Step {} loading cached output...'.format(self.name))
+            step_output_data = self._load_output(exp_dir_cache_step)
         elif self.output_is_persisted and self.load_persisted_output and not self.force_fitting:
             logger.info('Step {} loading persisted output...'.format(self.name))
             step_output_data = self._load_output(self.exp_dir_outputs_step)
@@ -316,6 +327,8 @@ class Step:
                 step_inputs = self._adapt(step_inputs)
             else:
                 step_inputs = self._unpack(step_inputs)
+            if 'id' in data:
+                step_inputs['id'] = data['id']
             step_output_data = self._cached_fit_transform(step_inputs)
         return step_output_data
 
@@ -344,9 +357,19 @@ class Step:
         Returns:
             dict: step outputs from the transformer.transform method
         """
-        if self.output_is_cached:
-            logger.info('Step {} loading cached output...'.format(self.name))
-            step_output_data = self._load_output(self.exp_dir_cache_step)
+        exp_dir_cache_step = self.exp_dir_cache_step
+        if 'id' in data:
+            exp_dir_cache_step = '{}__{}'.format(
+                exp_dir_cache_step, data['id'])
+        if os.path.exists(exp_dir_cache_step) and not self.force_fitting:
+            if 'id' in data:
+                logger.info(
+                    'Step {} loading cached output with '
+                    'id {}...'.format(self.name, data['id']))
+            else:
+                logger.info(
+                    'Step {} loading cached output...'.format(self.name))
+            step_output_data = self._load_output(exp_dir_cache_step)
         elif self.output_is_persisted and self.load_persisted_output:
             logger.info('Step {} loading persisted output...'.format(self.name))
             step_output_data = self._load_output(self.exp_dir_outputs_step)
@@ -441,9 +464,13 @@ class Step:
             self.transformer.persist(self.exp_dir_transformers_step)
 
         if self.cache_output:
+            exp_dir_cache_step = self.exp_dir_cache_step
+            if 'id' in step_inputs:
+                exp_dir_cache_step = '{}__{}'.format(
+                    exp_dir_cache_step, step_inputs['id'])
             logger.info('Step {}, caching output to the {}'
-                        .format(self.name, self.exp_dir_cache_step))
-            self._persist_output(step_output_data, self.exp_dir_cache_step)
+                        .format(self.name, exp_dir_cache_step))
+            self._persist_output(step_output_data, exp_dir_cache_step)
         if self.persist_output:
             logger.info('Step {}, persisting output to the {}'
                         .format(self.name, self.exp_dir_outputs_step))
@@ -467,9 +494,13 @@ class Step:
         else:
             raise ValueError('No transformer cached {}'.format(self.name))
         if self.cache_output:
+            exp_dir_cache_step = self.exp_dir_cache_step
+            if 'id' in step_inputs:
+                exp_dir_cache_step = '{}__{}'.format(
+                    exp_dir_cache_step, step_inputs['id'])
             logger.info('Step {}, caching output to the {}'
-                        .format(self.name, self.exp_dir_cache_step))
-            self._persist_output(step_output_data, self.exp_dir_cache_step)
+                        .format(self.name, exp_dir_cache_step))
+            self._persist_output(step_output_data, exp_dir_cache_step)
         if self.persist_output:
             logger.info('Step {}, persisting output to the {}'
                         .format(self.name, self.exp_dir_outputs_step))

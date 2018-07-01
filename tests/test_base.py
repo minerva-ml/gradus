@@ -99,3 +99,45 @@ def test_step_with_adapted_inputs(data):
     }
     assert output == expected
 
+
+def test_cache_output_without_id(data, tmpdir, monkeypatch):
+    exp_dir = tmpdir.mkdir("exp_dir")
+
+    step = Step(
+        name='test_cache_output_with_key',
+        transformer=IdentityOperation(),
+        input_data=['input_1'],
+        experiment_directory=str(exp_dir),
+        cache_output=True
+    )
+
+    step.fit_transform(data)
+    cache_path = exp_dir / 'cache' / step.name
+    assert cache_path.exists()
+
+
+def test_cache_output_with_id(tmpdir, monkeypatch):
+    exp_dir = tmpdir.mkdir("exp_dir")
+
+    data_train = {
+        'id': 'data_train',
+        'input': {
+            'features': np.array([
+                [1, 6],
+                [2, 5],
+                [3, 4]
+            ]),
+            'labels': np.array([2, 5, 3]),
+        }
+    }
+    step = Step(
+        name='test_cache_output_with_key',
+        transformer=IdentityOperation(),
+        input_data=['input'],
+        experiment_directory=str(exp_dir),
+        cache_output=True
+    )
+
+    step.fit_transform(data_train)
+    cache_path = exp_dir / 'cache' / step.name + '__data_train'
+    assert cache_path.exists()
