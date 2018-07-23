@@ -451,7 +451,7 @@ class Step:
         return step_output_data
 
     def _load_output(self, filepath):
-        logger.info('Step {}, loading from {}'.format(self.name, filepath))
+        logger.info('Step {}, loading output from {}'.format(self.name, filepath))
         return joblib.load(filepath)
 
     def _persist_output(self, output_data, filepath):
