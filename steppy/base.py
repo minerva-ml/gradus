@@ -317,13 +317,18 @@ class Step:
 
     def transform(self, data):
         """Transforms data or loads already processed data.
+
         Loads cached persisted outputs or adapts data for the current transformer and executes
         its `transform` method.
+
         Args:
             data (dict): data dictionary with keys as input names and values as dictionaries of
                 key:value pairs that can be passed to the ``step.transformer.fit_transform`` method
+
                 Example:
+
                     .. code-block:: python
+
                         data = {'input_1':{'X':X,
                                            'y':y
                                            },
@@ -331,6 +336,7 @@ class Step:
                                             'y':y
                                            }
                                }
+
         Returns:
             dict: step outputs from the transformer.transform method
         """
@@ -368,8 +374,10 @@ class Step:
 
     def get_step(self, name):
         """Extracts step by name from the pipeline.
+
         Extracted step is a fully functional pipeline as well.
         This method can be used to port parts of the pipeline between problems.
+
         Args:
             name (str): name of the step to be fetched
         Returns:
@@ -379,7 +387,9 @@ class Step:
 
     def persist_pipeline_diagram(self, filepath):
         """Creates pipeline diagram and persists it to disk as png file.
+
         Pydot graph is created and persisted to disk as png file under the filepath directory.
+
         Args:
             filepath (str): filepath to which the png with pipeline visualization should
                 be persisted
