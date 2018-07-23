@@ -231,9 +231,11 @@ class Step:
     def upstream_pipeline_structure(self):
         """Build dictionary with entire upstream pipeline structure
         (with regard to the current Step).
+
         Returns:
             dict: dictionary describing the upstream pipeline structure. It has two keys:
             ``'edges'`` and ``'nodes'``, where:
+
             - value of ``'edges'`` is set of tuples ``(input_step.name, self.name)``
             - value of ``'nodes'`` is set of all step names upstream to this Step
         """
@@ -245,6 +247,7 @@ class Step:
     @property
     def all_steps(self):
         """Build dictionary with all Step instances that are upstream to `self`.
+
         Returns:
             all_steps (dict): dictionary where keys are Step names (str) and values are Step
             instances (obj)
@@ -278,18 +281,23 @@ class Step:
 
     def fit_transform(self, data):
         """Fit the model and transform data or load already processed data.
+
         Loads cached or persisted outputs or adapts data for the current transformer and
         executes ``transformer.fit_transform``.
+
         Args:
             data (dict): data dictionary with keys as input names and values as dictionaries of
                 key-value pairs that can be passed to the ``self.transformer.fit_transform`` method.
                 Example:
+
                 .. code-block:: python
+
                     data = {'input_1': {'X': X,
                                         'y': y},
                             'input_2': {'X': X,
                                         'y': y}
                             }
+
         Returns:
             dict: Step outputs from the ``self.transformer.fit_transform`` method
         """
