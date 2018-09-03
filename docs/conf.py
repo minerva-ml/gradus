@@ -12,13 +12,14 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
+from __future__ import print_function
+import sys
+import os
+#import sphinx_gallery
 # sys.path.insert(0, os.path.abspath('.'))
 
-
 # -- Project information -----------------------------------------------------
-
+ 
 project = 'steppy'
 copyright = '2018, neptune.ml'
 author = 'Kamil A. Kaczmarek and Jakub Czakon'
@@ -41,8 +42,14 @@ release = '0.1.6'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
+    'nbsphinx',
+    'sphinx.ext.mathjax'
 ]
-
+autosummary_generate = ['module.rst', 'steppy.rst']
+# List of patterns, relative to source directory, that match files and
+# directories to ignore when looking for source files.
+# This pattern also affects html_static_path and html_extra_path .
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store','**.ipynb_checkpoints']
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -50,7 +57,7 @@ templates_path = ['_templates']
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.ipynb']
 
 # The master toctree document.
 master_doc = 'index'
@@ -62,10 +69,6 @@ master_doc = 'index'
 # Usually you set "language" from the command line for these cases.
 language = None
 
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -87,7 +90,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['_build/html/_static']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -158,4 +161,4 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
-extensions = ['sphinx.ext.napoleon']
+#extensions = ['sphinx.ext.napoleon']
