@@ -36,10 +36,10 @@ learning pipelines.
 
 ``Step`` is a wrapper over the transformer and handles multiple aspects
 of the execution of the pipeline, such as saving intermediate results
-(if needed), checkpoiting the model during training and much more.
+(if needed), checkpointing the model during training and much more.
 ``Tranformer`` in turn, is purely computational, data scientist-defined
 piece that takes an input data and produces some output data. Typical
-Transformers are neural netowrk, machine learning algorithms and pre- or
+Transformers are neural network, machine learning algorithms and pre- or
 post-processing routines.
 
 Start using steppy
