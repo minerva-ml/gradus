@@ -52,4 +52,4 @@ We are also building [steppy-toolkit](https://github.com/minerva-ml/steppy-toolk
 You are welcome to contribute to the Steppy library. Please check [CONTRIBUTING](https://github.com/minerva-ml/steppy/blob/master/CONTRIBUTING.md) for more information.
 
 ### Terms of use
-Steppy is [MIT-licesed](https://github.com/minerva-ml/steppy/blob/master/LICENSE).
+Steppy is [MIT-licensed](https://github.com/minerva-ml/steppy/blob/master/LICENSE).
