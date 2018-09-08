@@ -113,4 +113,4 @@ Terms of use
 ~~~~~~~~~~~~
 
 Steppy is
-`MIT-licesed <https://github.com/minerva-ml/steppy/blob/master/LICENSE>`__.
+`MIT-licensed <https://github.com/minerva-ml/steppy/blob/master/LICENSE>`__.
