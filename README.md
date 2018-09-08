@@ -14,8 +14,8 @@ In the course of the project, data scientist faces two problems:
 
 #### Solution
 Steppy address both problems by introducing two simple abstractions: `Step` and `Tranformer`. We consider it minimal interface for building machine learning pipelines.
-1. `Step` is a wrapper over the transformer and handles multiple aspects of the execution of the pipeline, such as saving intermediate results (if needed), checkpoiting the model during training and much more.
-1. `Tranformer` in turn, is purely computational, data scientist-defined piece that takes an input data and produces some output data. Typical Transformers are neural netowrk, machine learning algorithms and pre- or post-processing routines.
+1. `Step` is a wrapper over the transformer and handles multiple aspects of the execution of the pipeline, such as saving intermediate results (if needed), checkpointing the model during training and much more.
+1. `Tranformer` in turn, is purely computational, data scientist-defined piece that takes an input data and produces some output data. Typical Transformers are neural network, machine learning algorithms and pre- or post-processing routines.
 
 # Start using steppy
 ### Installation
