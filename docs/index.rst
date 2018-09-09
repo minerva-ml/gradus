@@ -17,7 +17,7 @@ Welcome to steppy
 .. toctree::
    :maxdepth: 2
 
-   generated/modules.rst   
+   generated/modules.rst
 
 Related projects
 ~~~~~~~~~~~~~~~~
