@@ -669,18 +669,6 @@ class BaseTransformer:
         raise NotImplementedError
 
 
-class IdentityOperation(BaseTransformer):
-    """Transformer that performs identity operation, f(x)=x.
-    """
-
-    def transform(self, **kwargs):
-        return kwargs
-
-    def persist(self, filepath):
-        logger.info('"IdentityOperation" is not persistable')
-        pass
-
-
 class StepsError(Exception):
     pass
 
