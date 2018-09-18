@@ -469,7 +469,7 @@ class Step:
                                  'Make sure that you have proper transformer under the directory: {}'
                                  .format(self.name, self.exp_dir_transformers))
         else:
-            logger.info('Step {}, is not fittable, transforming...'.format(self.name))
+            logger.info('Step {}, transforming...'.format(self.name))
             step_output_data = self.transformer.transform(**step_inputs)
             logger.info('Step {}, transforming completed'.format(self.name))
         if self.cache_output:
@@ -683,12 +683,16 @@ class StepsError(Exception):
 
 def make_transformer(func):
     class StaticTransformer(BaseTransformer):
-        def persist(self, filepath):
-            logger.info('StaticTransformer is not persistable.'
-                        'By running "fit_transform()", you simply "transform()".')
+        def fit(self):
+            logger.info('StaticTransformer "{}" is not fittable.'
+                        'By running "fit_transform()", you simply "transform()".'.format(self.__class__.__name__))
+            return self
 
         def transform(self, *args, **kwargs):
             return func(*args, **kwargs)
+
+        def persist(self, filepath):
+            logger.info('StaticTransformer "{}" is not persistable.'.format(self.__class__.__name__))
 
     _transformer = StaticTransformer()
     _transformer.__class__.__name__ = func.__name__
