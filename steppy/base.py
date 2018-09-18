@@ -432,9 +432,9 @@ class Step:
             'load_persisted_output': False,
             'persist_upstream_pipeline_structure': False
         """
-        self.clean_cache_upstream_steps()
+        self.clean_cache_upstream()
         self.set_mode_train()
-        for name, step_obj in self.all_upstream_steps.items():
+        for step_obj in self.all_upstream_steps.values():
             step_obj.is_fittable = DEFAULT_TRAINING_SETUP['is_fittable']
             step_obj.force_fitting = DEFAULT_TRAINING_SETUP['force_fitting']
             step_obj.persist_output = DEFAULT_TRAINING_SETUP['persist_output']
@@ -444,12 +444,12 @@ class Step:
         logger.info('Step {}, reset all upstream Steps to default training parameters, '
                     'including this Step'.format(self.name))
 
-    def set_parameters_upstream_steps(self, parameters):
+    def set_parameters_upstream(self, parameters):
         """Set parameters to all upstream Steps including this Step.
         Parameters is dict() where key is Step attribute, and value is new value to set.
         """
         assert isinstance(parameters, dict), 'parameters must be dict, got {} instead'.format(type(parameters))
-        for name, step_obj in self.all_upstream_steps.items():
+        for step_obj in self.all_upstream_steps.values():
             for key in step_obj.__dict__.keys():
                 if key in list(parameters.keys()):
                     step_obj.__dict__[key] = parameters[key]
@@ -461,7 +461,7 @@ class Step:
         logger.info('Step {}, cleaning cache'.format(self.name))
         self.output = None
 
-    def clean_cache_upstream_steps(self):
+    def clean_cache_upstream(self):
         """Clean cache for all steps that are upstream to `self`.
         """
         logger.info('Cleaning cache for the entire upstream pipeline')
@@ -624,8 +624,7 @@ class Step:
             name = transformer.__class__.__name__
         return name
 
-    @staticmethod
-    def _validate_step_name(name):
+    def _validate_step_name(self, name):
         if name is not None:
             assert isinstance(name, str) or isinstance(name, float) or isinstance(name, int),\
                 'Step name must be str, float or int. Got {} instead.'.format(type(name))
@@ -659,7 +658,7 @@ class Step:
         pass
 
     def _set_mode(self, mode):
-        self.clean_cache_upstream_steps()
+        self.clean_cache_upstream()
         for name, step_obj in self.all_upstream_steps.items():
             step_obj._mode = mode
         logger.info('Step {}, applied "{}" mode to all upstream Steps, including this Step'.format(self.name, mode))
