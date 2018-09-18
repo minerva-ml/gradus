@@ -128,7 +128,7 @@ class Step:
             Default ``False``: do not cache outputs
 
             Warning:
-                One should always run `pipeline.clean_cache_pipeline()` before executing
+                One should always run `pipeline.clean_cache_upstream()` before executing
                 `pipeline.fit_transform(data)` or `pipeline.transform(data)`
                 When working with large datasets, cache might be very large.
 
