@@ -77,7 +77,7 @@ def display_pipeline(structure_dict):
     """
     graph = _create_graph(structure_dict)
     plt = Image(graph.create_png())
-    display(plt)
+    display((plt,))
 
 
 def persist_as_png(structure_dict, filepath):

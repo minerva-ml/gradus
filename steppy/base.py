@@ -1,6 +1,5 @@
 import os
 import pprint
-import shutil
 from collections import defaultdict
 
 from sklearn.externals import joblib
@@ -281,8 +280,6 @@ class Step:
         """(bool): True if transformer exists under the directory
         ``<experiment_directory>/transformers/<step_name>``
         """
-        if isinstance(self.transformer, Step):
-            self._copy_transformer(self.transformer, self.name, self.exp_dir)
         return os.path.exists(self.exp_dir_transformers_step)
 
     @property
@@ -598,14 +595,6 @@ class Step:
                   "\n".join(["  '{}' present in steps {}".format(key, step_names)
                              for key, step_names in repeated_keys])
             raise StepsError(msg)
-
-    def _copy_transformer(self, step, name, dirpath):
-        self.transformer = self.transformer.transformer
-
-        original_filepath = os.path.join(step.exp_dir, 'transformers', step.name)
-        copy_filepath = os.path.join(dirpath, 'transformers', name)
-        logger.info('copying transformer from {} to {}'.format(original_filepath, copy_filepath))
-        shutil.copyfile(original_filepath, copy_filepath)
 
     def _prepare_experiment_directories(self):
         if not os.path.exists(os.path.join(self.exp_dir, 'outputs')):
