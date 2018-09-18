@@ -210,7 +210,6 @@ class Step:
 
         logger.info('Initializing Step {}'.format(name))
 
-        self.name = name
         self.transformer = transformer
         self.input_steps = input_steps or []
         self.input_data = input_data or []
@@ -221,8 +220,9 @@ class Step:
         self.load_persisted_output = load_persisted_output
         self.force_fitting = force_fitting
 
-        self.exp_dir = os.path.join(experiment_directory)
         self.output = None
+        self.name = self._apply_suffix(name)
+        self.exp_dir = os.path.join(experiment_directory)
         self._prepare_experiment_directories()
 
         if persist_upstream_pipeline_structure:
@@ -539,14 +539,14 @@ class Step:
             name = str(name)
         else:
             name = transformer.__class__.__name__
-        return '{}{}'.format(name, self._get_step_suffix(name))
+        return name
 
     def _validate_step_name(self, name):
         if name is not None:
             assert isinstance(name, str) or isinstance(name, float) or isinstance(name, int),\
                 'Step name must be str, float or int. Got {} instead.'.format(type(name))
 
-    def _get_step_suffix(self, name):
+    def _apply_suffix(self, name):
         """returns suffix '_k'
         Where 'k' is int that denotes highest increment of step with the same name.
         """
@@ -557,7 +557,7 @@ class Step:
             if key_stripped == name:
                 if key_id > highest_id:
                     highest_id += 1
-        return '_{}'.format(highest_id)
+        return '{}_{}'.format(name, highest_id)
 
     def _build_structure_dict(self, structure_dict):
         for input_step in self.input_steps:
