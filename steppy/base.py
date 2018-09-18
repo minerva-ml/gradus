@@ -170,8 +170,8 @@ class Step:
 
                  is_fittable=True,
                  force_fitting=True,
-                 persist_output=True,
 
+                 persist_output=False,
                  cache_output=False,
                  load_persisted_output=False,
                  persist_upstream_pipeline_structure=False):
@@ -550,13 +550,15 @@ class Step:
         """returns suffix '_k'
         Where 'k' is int that denotes highest increment of step with the same name.
         """
+        self.name = name
         highest_id = 0
         for key in self.all_steps.keys():
-            key_id = key.split('_')[-1]
-            key_stripped = key[:-len(key_id) - 1]
-            if key_stripped == name:
-                if key_id > highest_id:
-                    highest_id += 1
+            if not key == self.name:
+                key_id = key.split('_')[-1]
+                key_stripped = key[:-len(key_id) - 1]
+                if key_stripped == name:
+                    if key_id > highest_id:
+                        highest_id += 1
         return '{}_{}'.format(name, highest_id)
 
     def _build_structure_dict(self, structure_dict):

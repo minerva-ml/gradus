@@ -4,8 +4,6 @@ import pytest
 from steppy.base import Step, IdentityOperation, StepsError, make_transformer
 from steppy.adapter import Adapter, E
 
-from .steppy_test_utils import EXP_DIR
-
 
 @pytest.fixture
 def data():
@@ -38,12 +36,12 @@ def data():
 
 @pytest.mark.parametrize("mode", [0, 1])
 def test_make_transformer(mode):
-    def fun(x, y, mode=0):
-        return x + y if mode == 0 else x - y
+    def fun(x, y, m=0):
+        return x + y if m == 0 else x - y
     tr = make_transformer(fun)
 
     tr.fit()
-    res = tr.transform(7, 3, mode=mode)
+    res = tr.transform(7, 3, m=mode)
     assert res == (10 if mode == 0 else 4)
 
 
@@ -51,8 +49,7 @@ def test_inputs_without_conflicting_names_do_not_require_adapter(data):
     step = Step(
         name='test_inputs_without_conflicting_names_do_not_require_adapter_1',
         transformer=IdentityOperation(),
-        input_data=['input_1'],
-        experiment_directory=EXP_DIR
+        input_data=['input_1']
     )
     output = step.fit_transform(data)
     assert output == data['input_1']
@@ -60,8 +57,7 @@ def test_inputs_without_conflicting_names_do_not_require_adapter(data):
     step = Step(
         name='test_inputs_without_conflicting_names_do_not_require_adapter_2',
         transformer=IdentityOperation(),
-        input_data=['input_1', 'input_2'],
-        experiment_directory=EXP_DIR
+        input_data=['input_1', 'input_2']
     )
     output = step.fit_transform(data)
     assert output == {**data['input_1'], **data['input_2']}
@@ -71,18 +67,17 @@ def test_inputs_with_conflicting_names_require_adapter(data):
     step = Step(
         name='test_inputs_with_conflicting_names_require_adapter',
         transformer=IdentityOperation(),
-        input_data=['input_1', 'input_3'],
-        experiment_directory=EXP_DIR
+        input_data=['input_1', 'input_3']
     )
     with pytest.raises(StepsError):
         step.fit_transform(data)
+
 
 def test_step_with_adapted_inputs(data):
     step = Step(
         name='test_step_wit_adapted_inputs',
         transformer=IdentityOperation(),
         input_data=['input_1', 'input_3'],
-        experiment_directory=EXP_DIR,
         adapter=Adapter({
             'img': E('input_3', 'images'),
             'fea': E('input_1', 'features'),
@@ -98,4 +93,3 @@ def test_step_with_adapted_inputs(data):
         'l2': data['input_1']['labels'],
     }
     assert output == expected
-
