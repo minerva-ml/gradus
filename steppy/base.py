@@ -250,16 +250,16 @@ class Step:
         return structure_dict
 
     @property
-    def all_steps(self):
+    def all_upstream_steps(self):
         """Build dictionary with all Step instances that are upstream to `self`.
 
         Returns:
-            all_steps (dict): dictionary where keys are Step names (str) and values are Step
+            all_upstream_steps (dict): dictionary where keys are Step names (str) and values are Step
             instances (obj)
         """
-        all_steps = {}
-        all_steps = self._get_steps(all_steps)
-        return all_steps
+        all_steps_ = {}
+        all_steps_ = self._get_steps(all_steps_)
+        return all_steps_
 
     @property
     def transformer_is_persisted(self):
@@ -388,22 +388,30 @@ class Step:
         """Clean cache for all steps that are upstream to `self`.
         """
         logger.info('Cleaning cache for the entire upstream pipeline')
-        for step in self.all_steps.values():
+        for step in self.all_upstream_steps.values():
             logger.info('Step {}, cleaning cache'.format(step.name))
             step.output = None
 
-    def get_step(self, name):
+    def get_step_by_name(self, name):
         """Extracts step by name from the pipeline.
 
-        Extracted step is a fully functional pipeline as well.
-        This method can be used to port parts of the pipeline between problems.
+        Extracted Step is a fully functional pipeline as well.
+        All upstream Steps are already defined.
 
         Args:
             name (str): name of the step to be fetched
         Returns:
             Step (obj): extracted step
         """
-        return self.all_steps[name]
+        self._validate_step_name(name)
+        name = str(name)
+        try:
+            return self.all_upstream_steps[name]
+        except KeyError as e:
+            all_keys = list(self.all_upstream_steps.keys())
+            msg = 'No Step with name "{}" found.' \
+                  'You have following Steps: {}'.format(name, all_keys)
+            raise StepsError(msg) from e
 
     def persist_pipeline_diagram(self, filepath):
         """Creates pipeline diagram and persists it to disk as png file.
@@ -552,7 +560,7 @@ class Step:
         """
         self.name = name
         highest_id = 0
-        for key in self.all_steps.keys():
+        for key in self.all_upstream_steps.keys():
             if not key == self.name:
                 key_id = key.split('_')[-1]
                 key_stripped = key[:-len(key_id) - 1]
