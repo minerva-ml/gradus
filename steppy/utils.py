@@ -54,7 +54,7 @@ def get_logger():
         
             initialize_logger()
             logger = get_logger()
-            logger.info('My message inside pipeline')
+            logger.info('My message goes here')
             
         result looks like this:
         

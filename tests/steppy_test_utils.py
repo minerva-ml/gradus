@@ -1,16 +1,9 @@
 import logging
 import os
-import shutil
 
 from pathlib import Path
 
-EXP_DIR = '.cache'
-LOGS_PATH = 'steps.log'
-
-
-def remove_cache():
-    if Path(EXP_DIR).exists():
-        shutil.rmtree(EXP_DIR)
+LOGS_PATH = 'steps_tests.log'
 
 
 def remove_logs():
@@ -30,4 +23,3 @@ def prepare_steps_logger():
     fh.setLevel(logging.INFO)
     fh.setFormatter(fmt=message_format)
     logger.addHandler(fh)
-

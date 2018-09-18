@@ -230,7 +230,7 @@ class Step:
             logger.info('Saving upstream pipeline structure to {}'.format(persist_dir))
             joblib.dump(self.upstream_pipeline_structure, persist_dir)
 
-        logger.info('Step {} initialized'.format(name))
+        logger.info('Step {} initialized'.format(self.name))
 
     @property
     def upstream_pipeline_structure(self):
@@ -693,3 +693,15 @@ def make_transformer(func):
     _transformer = StaticTransformer()
     _transformer.__class__.__name__ = func.__name__
     return _transformer
+
+
+class IdentityOperation(BaseTransformer):
+    """Transformer that performs identity operation, f(x)=x.
+    """
+
+    def transform(self, **kwargs):
+        return kwargs
+
+    def persist(self, filepath):
+        logger.info('"IdentityOperation" is not persistable.')
+        pass

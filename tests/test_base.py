@@ -1,9 +1,8 @@
 import numpy as np
 import pytest
 
-from steppy.base import Step, StepsError, make_transformer
+from steppy.base import Step, StepsError, make_transformer, IdentityOperation
 from steppy.adapter import Adapter, E
-from toolkit.misc import IdentityOperation
 
 
 @pytest.fixture
