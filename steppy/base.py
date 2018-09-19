@@ -52,7 +52,7 @@ class Step:
             The following directories will be created under ``~/.steppy``, if they were not created by
             preceding Steps:
 
-            * transformer: transformer objects are persisted in this folder
+            * transformers: transformer objects are persisted in this folder
             * output:      step output dictionaries are persisted in this folder
               (if ``persist_output=True``)
 
