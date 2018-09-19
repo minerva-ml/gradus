@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from steppy.base import Step, StepsError, make_transformer, IdentityOperation
+from steppy.base import Step, StepError, make_transformer, IdentityOperation
 from steppy.adapter import Adapter, E
 
 
@@ -69,7 +69,7 @@ def test_inputs_with_conflicting_names_require_adapter(data):
         transformer=IdentityOperation(),
         input_data=['input_1', 'input_3']
     )
-    with pytest.raises(StepsError):
+    with pytest.raises(StepError):
         step.fit_transform(data)
 
 

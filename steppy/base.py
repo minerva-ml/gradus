@@ -488,7 +488,7 @@ class Step:
         except KeyError as e:
             msg = 'No Step with name "{}" found. ' \
                   'You have following Steps: {}'.format(name, ALL_STEPS_NAMES)
-            raise StepsError(msg) from e
+            raise StepError(msg) from e
 
     def persist_upstream_structure(self):
         """Persist json file with the upstream steps structure, that is step names and their connections."""
@@ -577,7 +577,7 @@ class Step:
             return self.adapter.adapt(step_inputs)
         except AdapterError as e:
             msg = "Error while adapting step '{}'. Check Step inputs".format(self.name)
-            raise StepsError(msg) from e
+            raise StepError(msg) from e
 
     def _unpack(self, step_inputs):
         logger.info('Step {}, unpacking inputs'.format(self.name))
@@ -596,7 +596,7 @@ class Step:
             msg = "Could not unpack inputs. Following keys are present in multiple input steps:\n" \
                   "\n".join(["  '{}' present in steps {}".format(key, step_names)
                              for key, step_names in repeated_keys])
-            raise StepsError(msg)
+            raise StepError(msg)
 
     def _prepare_experiment_directories(self):
         if not os.path.exists(os.path.join(self.experiment_directory, 'output')):
@@ -751,7 +751,7 @@ class BaseTransformer:
         raise NotImplementedError
 
 
-class StepsError(Exception):
+class StepError(Exception):
     pass
 
 
