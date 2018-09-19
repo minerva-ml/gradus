@@ -1,6 +1,14 @@
 steppy package
 ==============
 
+.. automodule:: steppy
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
 steppy.adapter module
 ---------------------
 
@@ -24,4 +32,5 @@ steppy.utils module
     :members:
     :undoc-members:
     :show-inheritance:
+
 

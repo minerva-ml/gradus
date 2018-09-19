@@ -1,23 +1,18 @@
 Welcome to steppy
 ==================================
 
-
-
-
-
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
+   :numbered:
    :caption: Table of Contents
    :name: mastertoc
 
    nbdoc/intro.ipynb
    nbdoc/Contributing.ipynb
+   nbdoc/testdoc.ipynb   
    nbdoc/FAQ.ipynb
+   generated/modules
 
-.. toctree::
-   :maxdepth: 2
-
-   generated/modules.rst
 
 Related projects
 ~~~~~~~~~~~~~~~~
@@ -40,4 +35,4 @@ Terms of use
 ~~~~~~~~~~~~
 
 Steppy is
-`MIT-licesed <https://github.com/minerva-ml/steppy/blob/master/LICENSE>`__.
+`MIT-licensed <https://github.com/minerva-ml/steppy/blob/master/LICENSE>`__.
