@@ -391,16 +391,9 @@ class Step:
             logger.info('Step {} using cached output'.format(self.name))
             step_output_data = self.output
         elif self.output_is_persisted and self.load_persisted_output:
-            if self._mode == 'train':
-                logger.info(
-                    'Step {} loading persisted output from {}'.format(self.name,
-                                                                      self.experiment_directory_output_step))
-                step_output_data = self._load_output(self.experiment_directory_output_step)
-            else:
-                logger.info(
-                    'Step {} loading persisted output from {}'.format(self.name,
-                                                                      self.experiment_directory_output_step))
-                step_output_data = self._load_output(self.experiment_directory_output_step)
+            logger.info('Step {} loading persisted output from {}'.format(self.name,
+                                                                          self.experiment_directory_output_step))
+            step_output_data = self._load_output(self.experiment_directory_output_step)
         else:
             step_inputs = {}
             if self.input_data is not None:
@@ -565,11 +558,7 @@ class Step:
         if self.cache_output:
             logger.info('Step {}, caching output'.format(self.name))
             self.output = step_output_data
-        if self.persist_output and self._mode == 'train':
-            logger.info('Step {}, persisting output to the {}'
-                        .format(self.name, self.experiment_directory_output_step))
-            self._persist_output(step_output_data, self.experiment_directory_output_step)
-        elif self.persist_output and self._mode == 'inference':
+        if self.persist_output:
             logger.info('Step {}, persisting output to the {}'
                         .format(self.name, self.experiment_directory_output_step))
             self._persist_output(step_output_data, self.experiment_directory_output_step)
