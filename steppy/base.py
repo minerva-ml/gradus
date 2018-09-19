@@ -505,8 +505,8 @@ class Step:
             filepath (str): filepath to which the png with steps visualization should
                 be persisted
         """
-        assert isinstance(filepath, str), 'Step {} error, filepath must be str. Got {}' \
-                                          ' instead'.format(self.name, type(filepath))
+        assert isinstance(filepath, str),\
+            'Step {} error, filepath must be str. Got {} instead'.format(self.name, type(filepath))
         persist_as_png(self.upstream_structure, filepath)
 
     def _fit_transform_operation(self, step_inputs):
@@ -516,18 +516,43 @@ class Step:
                             .format(self.name, self.experiment_directory_transformers_step))
                 self.transformer.load(self.experiment_directory_transformers_step)
                 logger.info('Step {}, transforming...'.format(self.name))
-                step_output_data = self.transformer.transform(**step_inputs)
+
+                try:
+                    step_output_data = self.transformer.transform(**step_inputs)
+                except Exception as e:
+                    msg = 'Step {}, Transformer "{}" error during "transform()" operation. ' \
+                          'Check "Step.transformer" implementation"'.format(self.name,
+                                                                            self.transformer.__class__.__name__)
+                    raise StepError(msg) from e
+
                 logger.info('Step {}, transforming completed'.format(self.name))
             else:
                 logger.info('Step {}, fitting and transforming...'.format(self.name))
-                step_output_data = self.transformer.fit_transform(**step_inputs)
+
+                try:
+                    step_output_data = self.transformer.fit_transform(**step_inputs)
+                except Exception as e:
+                    msg = 'Step {}, Transformer "{}" error during "fit_transform()" operation. ' \
+                          'Check "Step.transformer" implementation"'.format(self.name,
+                                                                            self.transformer.__class__.__name__)
+                    raise StepError(msg) from e
+
                 logger.info('Step {}, fitting and transforming completed'.format(self.name))
                 logger.info('Step {}, persisting transformer to the {}'
                             .format(self.name, self.experiment_directory_transformers_step))
                 self.transformer.persist(self.experiment_directory_transformers_step)
         else:
             logger.info('Step {}, is not fittable, transforming...'.format(self.name))
-            step_output_data = self.transformer.transform(**step_inputs)
+
+            try:
+                step_output_data = self.transformer.transform(**step_inputs)
+            except Exception as e:
+                msg = 'Step {}, Transformer "{}" error during "transform()" operation. ' \
+                      'This Transformer is not fittable. ' \
+                      'Check "Step.transformer" implementation"'.format(self.name,
+                                                                        self.transformer.__class__.__name__)
+                raise StepError(msg) from e
+
             logger.info('Step {}, transforming completed'.format(self.name))
         if self.cache_output:
             logger.info('Step {}, caching output'.format(self.name))
@@ -545,7 +570,15 @@ class Step:
                             .format(self.name, self.experiment_directory_transformers_step))
                 self.transformer.load(self.experiment_directory_transformers_step)
                 logger.info('Step {}, transforming...'.format(self.name))
-                step_output_data = self.transformer.transform(**step_inputs)
+
+                try:
+                    step_output_data = self.transformer.transform(**step_inputs)
+                except Exception as e:
+                    msg = 'Step {}, Transformer "{}" error during "transform()" operation. ' \
+                          'Check "Step.transformer" implementation"'.format(self.name,
+                                                                            self.transformer.__class__.__name__)
+                    raise StepError(msg) from e
+
                 logger.info('Step {}, transforming completed'.format(self.name))
             else:
                 raise ValueError('No transformer persisted with name: {}'
@@ -553,7 +586,16 @@ class Step:
                                  .format(self.name, self.experiment_directory_transformers_step))
         else:
             logger.info('Step {}, transforming...'.format(self.name))
-            step_output_data = self.transformer.transform(**step_inputs)
+
+            try:
+                step_output_data = self.transformer.transform(**step_inputs)
+            except Exception as e:
+                msg = 'Step {}, Transformer "{}" error during "transform()" operation. ' \
+                      'This Transformer is not fittable. ' \
+                      'Check "Step.transformer" implementation"'.format(self.name,
+                                                                        self.transformer.__class__.__name__)
+                raise StepError(msg) from e
+
             logger.info('Step {}, transforming completed'.format(self.name))
         if self.cache_output:
             logger.info('Step {}, caching output'.format(self.name))
@@ -593,7 +635,7 @@ class Step:
         if len(repeated_keys) == 0:
             return unpacked_steps
         else:
-            msg = "Could not unpack inputs. Following keys are present in multiple input steps:\n" \
+            msg = "Could not unpack inputs. Following keys are present in multiple input steps:\n " \
                   "\n".join(["  '{}' present in steps {}".format(key, step_names)
                              for key, step_names in repeated_keys])
             raise StepError(msg)
