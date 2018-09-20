@@ -13,11 +13,11 @@ and is distributed under the MIT license.
 
 setup(name='steppy',
       packages=['steppy'],
-      version='0.1.8',
+      version='0.1.9',
       description='A lightweight, open-source, Python library for fast and reproducible experimentation',
       long_description=long_description,
       url='https://github.com/minerva-ml/steppy',
-      download_url='https://github.com/minerva-ml/steppy/archive/0.1.8.tar.gz',
+      download_url='https://github.com/minerva-ml/steppy/archive/0.1.9.tar.gz',
       author='Kamil A. Kaczmarek, Jakub Czakon',
       author_email='kamil.kaczmarek@neptune.ml, jakub.czakon@neptune.ml',
       keywords=['machine-learning', 'reproducibility', 'pipeline', 'data-science'],
