@@ -18,7 +18,7 @@ DEFAULT_TRAINING_SETUP = {
     'load_persisted_output': False
 }
 
-ALL_STEPS_NAMES = list()
+_ALL_STEPS_NAMES = list()
 
 
 class Step:
@@ -229,7 +229,7 @@ class Step:
 
         self.output = None
         self.name = self._apply_suffix(name)
-        ALL_STEPS_NAMES.append(self.name)
+        _ALL_STEPS_NAMES.append(self.name)
 
         self.experiment_directory = os.path.join(experiment_directory)
         self.experiment_directory_transformers_step = os.path.join(self.experiment_directory,
@@ -487,7 +487,7 @@ class Step:
             return self.all_upstream_steps[name]
         except KeyError as e:
             msg = 'No Step with name "{}" found. ' \
-                  'You have following Steps: {}'.format(name, ALL_STEPS_NAMES)
+                  'You have following Steps: {}'.format(name, _ALL_STEPS_NAMES)
             raise StepError(msg) from e
 
     def persist_upstream_structure(self):
@@ -670,7 +670,7 @@ class Step:
         Where 'k' is int that denotes highest increment of step with the same name.
         """
         highest_id = 0
-        for x in ALL_STEPS_NAMES:
+        for x in _ALL_STEPS_NAMES:
             if not x == name:
                 key_id = x.split('_')[-1]
                 key_stripped = x[:-len(key_id) - 1]
