@@ -790,7 +790,7 @@ class BaseTransformer:
         Args:
             filepath (str): filepath where the transformer parameters should be persisted
         """
-        raise NotImplementedError
+        joblib.dump({}, filepath)
 
 
 class StepError(Exception):
