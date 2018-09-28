@@ -232,14 +232,17 @@ class Step:
         _ALL_STEPS_NAMES.append(self.name)
 
         self.experiment_directory = os.path.join(experiment_directory)
-        self.experiment_directory_transformers_step = os.path.join(self.experiment_directory,
-                                                                   'transformers',
-                                                                   self.name)
 
         self._prepare_experiment_directories()
         self._mode = 'train'
 
         logger.info('Step {} initialized'.format(self.name))
+
+    @property
+    def experiment_directory_transformers_step(self):
+        directory = os.path.join(self.experiment_directory, 'transformers')
+        os.makedirs(directory, exist_ok=True)
+        return os.path.join(directory, self.name)
 
     @property
     def experiment_directory_output_step(self):
@@ -454,6 +457,8 @@ class Step:
             for key in step_obj.__dict__.keys():
                 if key in list(parameters.keys()):
                     step_obj.__dict__[key] = parameters[key]
+                    if key == 'experiment_directory':
+                        step_obj._prepare_experiment_directories()
         logger.info('set new values to all upstream Steps including this Step.')
 
     def clean_cache_step(self):
@@ -641,7 +646,7 @@ class Step:
             raise StepError(msg)
 
     def _prepare_experiment_directories(self):
-        if not os.path.exists(os.path.join(self.experiment_directory, 'output')):
+        if not os.path.exists(os.path.join(self.experiment_directory, 'transformers')):
             logger.info('initializing experiment directories under {}'.format(self.experiment_directory))
             for dir_name in ['transformers', 'output']:
                 os.makedirs(os.path.join(self.experiment_directory, dir_name), exist_ok=True)
