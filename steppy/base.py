@@ -795,7 +795,7 @@ class BaseTransformer:
         Args:
             filepath (str): filepath where the transformer parameters should be persisted
         """
-        joblib.dump({}, filepath)
+        joblib.dump('hello-steppy', filepath)
 
 
 class StepError(Exception):
