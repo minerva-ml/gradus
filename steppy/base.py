@@ -212,7 +212,6 @@ class Step:
         assert isinstance(force_fitting, bool), 'Step {} error, force_fitting must be bool, ' \
                                                 'got {} instead.'.format(self.name, type(force_fitting))
 
-        self._validate_upstream_names()
         logger.info('Initializing Step {}'.format(self.name))
 
         self.transformer = transformer
@@ -231,6 +230,7 @@ class Step:
         self._prepare_experiment_directories()
         self._mode = 'train'
 
+        self._validate_upstream_names()
         logger.info('Step {} initialized'.format(self.name))
 
     @property
