@@ -18,8 +18,6 @@ DEFAULT_TRAINING_SETUP = {
     'load_persisted_output': False
 }
 
-_ALL_STEPS_NAMES = list()
-
 
 class Step:
     """Step is a building block of steppy pipelines.
@@ -181,11 +179,6 @@ class Step:
                  load_persisted_output=False):
 
         self.name = self._format_step_name(name, transformer)
-        if self._name_unique():
-            _ALL_STEPS_NAMES.append(self.name)
-        else:
-            raise ValueError('Step with name "{}", already exist. You must assign unique Step name. '
-                             'Use "Step.name" parameter to do it.'.format(self.name))
 
         if experiment_directory is not None:
             assert isinstance(experiment_directory, str),\
@@ -219,6 +212,7 @@ class Step:
         assert isinstance(force_fitting, bool), 'Step {} error, force_fitting must be bool, ' \
                                                 'got {} instead.'.format(self.name, type(force_fitting))
 
+        self._validate_upstream_names()
         logger.info('Initializing Step {}'.format(self.name))
 
         self.transformer = transformer
@@ -493,7 +487,7 @@ class Step:
             return self.all_upstream_steps[name]
         except KeyError as e:
             msg = 'No Step with name "{}" found. ' \
-                  'You have following Steps: {}'.format(name, _ALL_STEPS_NAMES)
+                  'You have following Steps: {}'.format(name, list(self.all_upstream_steps.keys()))
             raise StepError(msg) from e
 
     def persist_upstream_structure(self):
@@ -526,9 +520,8 @@ class Step:
                 try:
                     step_output_data = self.transformer.transform(**step_inputs)
                 except Exception as e:
-                    msg = 'Step {}, Transformer "{}" error during "transform()" operation. ' \
-                          'Check "Step.transformer" implementation"'.format(self.name,
-                                                                            self.transformer.__class__.__name__)
+                    msg = 'Step {}, Transformer "{}" error ' \
+                          'during "transform()" operation.'.format(self.name, self.transformer.__class__.__name__)
                     raise StepError(msg) from e
 
                 logger.info('Step {}, transforming completed'.format(self.name))
@@ -538,9 +531,8 @@ class Step:
                 try:
                     step_output_data = self.transformer.fit_transform(**step_inputs)
                 except Exception as e:
-                    msg = 'Step {}, Transformer "{}" error during "fit_transform()" operation. ' \
-                          'Check "Step.transformer" implementation"'.format(self.name,
-                                                                            self.transformer.__class__.__name__)
+                    msg = 'Step {}, Transformer "{}" error ' \
+                          'during "fit_transform()" operation.'.format(self.name, self.transformer.__class__.__name__)
                     raise StepError(msg) from e
 
                 logger.info('Step {}, fitting and transforming completed'.format(self.name))
@@ -553,10 +545,8 @@ class Step:
             try:
                 step_output_data = self.transformer.transform(**step_inputs)
             except Exception as e:
-                msg = 'Step {}, Transformer "{}" error during "transform()" operation. ' \
-                      'This Transformer is not fittable. ' \
-                      'Check "Step.transformer" implementation"'.format(self.name,
-                                                                        self.transformer.__class__.__name__)
+                msg = 'Step {}, Transformer "{}" error ' \
+                      'during "transform()" operation.'.format(self.name, self.transformer.__class__.__name__)
                 raise StepError(msg) from e
 
             logger.info('Step {}, transforming completed'.format(self.name))
@@ -580,9 +570,8 @@ class Step:
                 try:
                     step_output_data = self.transformer.transform(**step_inputs)
                 except Exception as e:
-                    msg = 'Step {}, Transformer "{}" error during "transform()" operation. ' \
-                          'Check "Step.transformer" implementation"'.format(self.name,
-                                                                            self.transformer.__class__.__name__)
+                    msg = 'Step {}, Transformer "{}" error ' \
+                          'during "transform()" operation.'.format(self.name, self.transformer.__class__.__name__)
                     raise StepError(msg) from e
 
                 logger.info('Step {}, transforming completed'.format(self.name))
@@ -596,10 +585,8 @@ class Step:
             try:
                 step_output_data = self.transformer.transform(**step_inputs)
             except Exception as e:
-                msg = 'Step {}, Transformer "{}" error during "transform()" operation. ' \
-                      'This Transformer is not fittable. ' \
-                      'Check "Step.transformer" implementation"'.format(self.name,
-                                                                        self.transformer.__class__.__name__)
+                msg = 'Step {}, Transformer "{}" error ' \
+                      'during "transform()" operation.'.format(self.name, self.transformer.__class__.__name__)
                 raise StepError(msg) from e
 
             logger.info('Step {}, transforming completed'.format(self.name))
@@ -653,6 +640,7 @@ class Step:
                 os.makedirs(os.path.join(self.experiment_directory, dir_name), exist_ok=True)
 
     def _get_steps(self, all_steps):
+        self._check_name_uniqueness(all_steps=all_steps)
         for input_step in self.input_steps:
             all_steps = input_step._get_steps(all_steps)
         all_steps[self.name] = self
@@ -671,11 +659,16 @@ class Step:
             assert isinstance(name, str) or isinstance(name, float) or isinstance(name, int),\
                 'Step name must be str, float or int. Got {} instead.'.format(type(name))
 
-    def _name_unique(self):
-        unique = True
-        if self.name in _ALL_STEPS_NAMES:
-            unique = False
-        return unique
+    def _check_name_uniqueness(self, all_steps):
+        if self.name in all_steps.keys():
+            raise ValueError('Step with name "{}", already exist. Assign unique Step name.'.format(self.name))
+
+    def _validate_upstream_names(self):
+        try:
+            _ = self.all_upstream_steps.keys()
+        except ValueError as e:
+            msg = 'Incorrect Step names'
+            raise StepError(msg) from e
 
     def _build_structure_dict(self, structure_dict):
         for input_step in self.input_steps:
