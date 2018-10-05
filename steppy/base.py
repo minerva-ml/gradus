@@ -180,41 +180,46 @@ class Step:
                  cache_output=False,
                  load_persisted_output=False):
 
-        name = self._format_step_name(name, transformer)
+        self.name = self._format_step_name(name, transformer)
+        if self._name_unique():
+            _ALL_STEPS_NAMES.append(self.name)
+        else:
+            raise ValueError('Step with name "{}", already exist. You must assign unique Step name. '
+                             'Use "Step.name" parameter to do it.'.format(self.name))
 
         if experiment_directory is not None:
             assert isinstance(experiment_directory, str),\
                 'Step {} error, experiment_directory must ' \
-                'be str, got {} instead.'.format(name, type(experiment_directory))
+                'be str, got {} instead.'.format(self.name, type(experiment_directory))
         else:
             experiment_directory = os.path.join(os.path.expanduser("~"), '.steppy')
             logger.info('Using default experiment directory: {}'.format(experiment_directory))
 
         if output_directory is not None:
             assert isinstance(output_directory, str),\
-                'Step {}, output_directory must be str, got {} instead'.format(name, type(output_directory))
+                'Step {}, output_directory must be str, got {} instead'.format(self.name, type(output_directory))
 
         if input_data is not None:
             assert isinstance(input_data, list), 'Step {} error, input_data must be list, ' \
-                                                 'got {} instead.'.format(name, type(input_data))
+                                                 'got {} instead.'.format(self.name, type(input_data))
         if input_steps is not None:
             assert isinstance(input_steps, list), 'Step {} error, input_steps must be list, ' \
-                                                  'got {} instead.'.format(name, type(input_steps))
+                                                  'got {} instead.'.format(self.name, type(input_steps))
         if adapter is not None:
             assert isinstance(adapter, Adapter), 'Step {} error, adapter must be an instance ' \
-                                                 'of {}'.format(name, str(Adapter))
+                                                 'of {}'.format(self.name, str(Adapter))
 
         assert isinstance(cache_output, bool), 'Step {} error, cache_output must be bool, ' \
-                                               'got {} instead.'.format(name, type(cache_output))
+                                               'got {} instead.'.format(self.name, type(cache_output))
         assert isinstance(persist_output, bool), 'Step {} error, persist_output must be bool, ' \
-                                                 'got {} instead.'.format(name, type(persist_output))
+                                                 'got {} instead.'.format(self.name, type(persist_output))
         assert isinstance(load_persisted_output, bool),\
             'Step {} error, load_persisted_output ' \
-            'must be bool, got {} instead.'.format(name, type(load_persisted_output))
+            'must be bool, got {} instead.'.format(self.name, type(load_persisted_output))
         assert isinstance(force_fitting, bool), 'Step {} error, force_fitting must be bool, ' \
-                                                'got {} instead.'.format(name, type(force_fitting))
+                                                'got {} instead.'.format(self.name, type(force_fitting))
 
-        logger.info('Initializing Step {}'.format(name))
+        logger.info('Initializing Step {}'.format(self.name))
 
         self.transformer = transformer
         self.output_directory = output_directory
@@ -228,11 +233,7 @@ class Step:
         self.force_fitting = force_fitting
 
         self.output = None
-        self.name = self._apply_suffix(name)
-        _ALL_STEPS_NAMES.append(self.name)
-
         self.experiment_directory = os.path.join(experiment_directory)
-
         self._prepare_experiment_directories()
         self._mode = 'train'
 
@@ -670,19 +671,11 @@ class Step:
             assert isinstance(name, str) or isinstance(name, float) or isinstance(name, int),\
                 'Step name must be str, float or int. Got {} instead.'.format(type(name))
 
-    def _apply_suffix(self, name):
-        """returns suffix '_k'
-        Where 'k' is int that denotes highest increment of step with the same name.
-        """
-        highest_id = 0
-        for x in _ALL_STEPS_NAMES:
-            if not x == name:
-                key_id = x.split('_')[-1]
-                key_stripped = x[:-len(key_id) - 1]
-                if key_stripped == name:
-                    if int(key_id) >= highest_id:
-                        highest_id += 1
-        return '{}_{}'.format(name, highest_id)
+    def _name_unique(self):
+        unique = True
+        if self.name in _ALL_STEPS_NAMES:
+            unique = False
+        return unique
 
     def _build_structure_dict(self, structure_dict):
         for input_step in self.input_steps:
