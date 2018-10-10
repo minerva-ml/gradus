@@ -661,7 +661,8 @@ class Step:
 
     def _check_name_uniqueness(self, all_steps):
         if self.name in all_steps.keys():
-            raise ValueError('Step with name "{}", already exist. Assign unique Step name.'.format(self.name))
+            logger.info('STEPPY WARNING: Step with name "{}", already exist. '
+                        'Make sure that all Steps have unique name.'.format(self.name))
 
     def _validate_upstream_names(self):
         try:
