@@ -465,6 +465,7 @@ class Step:
         """
         logger.info('Step {}, cleaning cache'.format(self.name))
         self.output = None
+        return self
 
     def clean_cache_upstream(self):
         """Clean cache for all steps that are upstream to `self`.
@@ -473,6 +474,7 @@ class Step:
         for step in self.all_upstream_steps.values():
             logger.info('Step {}, cleaning cache'.format(step.name))
             step.output = None
+        return self
 
     def get_step_by_name(self, name):
         """Extracts step by name from the pipeline.
