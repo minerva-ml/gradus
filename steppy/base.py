@@ -414,12 +414,14 @@ class Step:
         and cleans cache for all upstream Steps including this Step.
         """
         self._set_mode('train')
+        return self
 
     def set_mode_inference(self):
         """Applies 'inference' mode to all upstream Steps including this Step
         and cleans cache for all upstream Steps including this Step.
         """
         self._set_mode('inference')
+        return self
 
     def reset(self):
         """Reset all upstream Steps to the default training parameters and
@@ -442,6 +444,7 @@ class Step:
             step_obj.load_persisted_output = DEFAULT_TRAINING_SETUP['load_persisted_output']
         logger.info('Step {}, reset all upstream Steps to default training parameters, '
                     'including this Step'.format(self.name))
+        return self
 
     def set_parameters_upstream(self, parameters):
         """Set parameters to all upstream Steps including this Step.
@@ -455,6 +458,7 @@ class Step:
                     if key == 'experiment_directory':
                         step_obj._prepare_experiment_directories()
         logger.info('set new values to all upstream Steps including this Step.')
+        return self
 
     def clean_cache_step(self):
         """Clean cache for current step.
