@@ -329,7 +329,11 @@ class Step:
         Returns:
             dict: Step output from the ``self.transformer.fit_transform`` method
         """
+        if data:
+            assert isinstance(data, dict), 'Step {}, "data" argument in the "fit_transform()" method must be dict, ' \
+                                           'got {} instead.'.format(self.name, type(data))
         logger.info('Step {}, working in "{}" mode'.format(self.name, self._mode))
+
         if self._mode == 'inference':
             ValueError('Step {}, you are in "{}" mode, where you cannot run "fit".'
                        'Please change mode to "train" to enable fitting.'
@@ -384,7 +388,11 @@ class Step:
         Returns:
             dict: step output from the transformer.transform method
         """
+        if data:
+            assert isinstance(data, dict), 'Step {}, "data" argument in the "fit_transform()" method must be dict, ' \
+                                           'got {} instead.'.format(self.name, type(data))
         logger.info('Step {}, working in "{}" mode'.format(self.name, self._mode))
+
         if self.output_is_cached:
             logger.info('Step {} using cached output'.format(self.name))
             step_output_data = self.output
@@ -556,6 +564,12 @@ class Step:
                 raise StepError(msg) from e
 
             logger.info('Step {}, transforming completed'.format(self.name))
+
+        assert isinstance(step_output_data, dict), 'Step {}, Transformer "{}", error. ' \
+            'Output from transformer must be dict, got {} instead'.format(self.name,
+                                                                          self.transformer.__class__.__name__,
+                                                                          type(step_output_data))
+
         if self.cache_output:
             logger.info('Step {}, caching output'.format(self.name))
             self.output = step_output_data
@@ -596,6 +610,12 @@ class Step:
                 raise StepError(msg) from e
 
             logger.info('Step {}, transforming completed'.format(self.name))
+
+        assert isinstance(step_output_data, dict), 'Step {}, Transformer "{}", error. ' \
+            'Output from transformer must be dict, got {} instead'.format(self.name,
+                                                                          self.transformer.__class__.__name__,
+                                                                          type(step_output_data))
+
         if self.cache_output:
             logger.info('Step {}, caching output'.format(self.name))
             self.output = step_output_data
