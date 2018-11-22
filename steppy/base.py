@@ -389,7 +389,7 @@ class Step:
             dict: step output from the transformer.transform method
         """
         if data:
-            assert isinstance(data, dict), 'Step {}, "data" argument in the "fit_transform()" method must be dict, ' \
+            assert isinstance(data, dict), 'Step {}, "data" argument in the "transform()" method must be dict, ' \
                                            'got {} instead.'.format(self.name, type(data))
         logger.info('Step {}, working in "{}" mode'.format(self.name, self._mode))
 
